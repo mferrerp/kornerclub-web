@@ -47,7 +47,7 @@ export default function Navbar() {
               style={styles.langBtn}
               onClick={() => setLangOpen(!langOpen)}
             >
-              <span style={{ fontSize: 16 }}>{currentLang.flag}</span>
+              <span style={{ fontSize: 16, fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" }}>{currentLang.flag}</span>
               <span>{currentLang.code}</span>
               <span style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
             </button>
@@ -67,7 +67,7 @@ export default function Navbar() {
                       setLangOpen(false);
                     }}
                   >
-                    <span style={{ fontSize: 16 }}>{lang.flag}</span>
+                    <span style={{ fontSize: 16, fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" }}>{lang.flag}</span>
                     {lang.label}
                   </button>
                 ))}
