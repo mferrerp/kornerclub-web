@@ -47,7 +47,7 @@ export default function Footer() {
           ))}
         </div>
         <div style={styles.bottom}>
-          <span>© 2026 Korner Club Homes, S.L. Todos los derechos reservados.</span>
+          <span>© 2026 Korner Ventures, S.L. Todos los derechos reservados.</span>
           <div style={{ display: "flex", gap: 20 }}>
             <a href="#" style={styles.bottomLink}>Aviso legal</a>
             <a href="#" style={styles.bottomLink}>Privacidad</a>
