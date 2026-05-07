@@ -3,10 +3,10 @@
 import { useState } from "react";
 
 const languages = [
-  { code: "ES", flag: "🇪🇸", label: "Español" },
-  { code: "EN", flag: "🇬🇧", label: "English" },
-  { code: "FR", flag: "🇫🇷", label: "Français" },
-  { code: "DE", flag: "🇩🇪", label: "Deutsch" },
+  { code: "ES", flag: "https://flagcdn.com/w20/es.png", label: "Español" },
+  { code: "EN", flag: "https://flagcdn.com/w20/gb.png", label: "English" },
+  { code: "FR", flag: "https://flagcdn.com/w20/fr.png", label: "Français" },
+  { code: "DE", flag: "https://flagcdn.com/w20/de.png", label: "Deutsch" },
 ];
 
 export default function Navbar() {
@@ -47,7 +47,7 @@ export default function Navbar() {
               style={styles.langBtn}
               onClick={() => setLangOpen(!langOpen)}
             >
-              <span style={{ fontSize: 16, fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" }}>{currentLang.flag}</span>
+              <img src={currentLang.flag} alt={currentLang.code} style={{ width: 20, height: 15, objectFit: "cover", borderRadius: 2 }} />
               <span>{currentLang.code}</span>
               <span style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
             </button>
@@ -67,7 +67,7 @@ export default function Navbar() {
                       setLangOpen(false);
                     }}
                   >
-                    <span style={{ fontSize: 16, fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" }}>{lang.flag}</span>
+                    <img src={lang.flag} alt={lang.code} style={{ width: 20, height: 15, objectFit: "cover", borderRadius: 2 }} />
                     {lang.label}
                   </button>
                 ))}
