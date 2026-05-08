@@ -102,7 +102,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "0 24px",
   },
   h1: {
-    fontFamily: "var(--font-playfair), serif",
+    fontFamily: "var(--font-libre-franklin), var(--font-playfair), serif",
     fontSize: 48,
     fontWeight: 700,
     color: "white",

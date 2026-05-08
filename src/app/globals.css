@@ -33,3 +33,44 @@ body {
   background: var(--off-white);
   -webkit-font-smoothing: antialiased;
 }
+
+@media (max-width: 768px) {
+  /* Services: 4 col → 2 col */
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Barrios: 5 col fixed-height → 2 col with aspect-ratio */
+  .barrios-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: auto !important;
+  }
+  .barrios-grid a {
+    aspect-ratio: 4 / 3;
+  }
+  .barrios-featured {
+    grid-column: span 2 !important;
+    grid-row: span 1 !important;
+    aspect-ratio: 16 / 9;
+  }
+
+  /* NewcomersCTA: 2 col → 1 col, imagen oculta */
+  .newcomers-card {
+    grid-template-columns: 1fr !important;
+  }
+  .newcomers-text {
+    padding: 32px !important;
+  }
+  .newcomers-image {
+    display: none !important;
+  }
+
+  /* AgentCTA: 2 col → 1 col, imagen oculta */
+  .agent-section {
+    grid-template-columns: 1fr !important;
+  }
+  .agent-image {
+    display: none !important;
+  }
+}
