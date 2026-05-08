@@ -38,7 +38,7 @@ export default function Services() {
           Te acompañamos en cada paso, desde la búsqueda hasta la firma
         </p>
       </div>
-      <div style={styles.grid}>
+      <div style={styles.grid} className="services-grid">
         {services.map((s) => (
           <a key={s.title} href="#" style={styles.card}>
             <div

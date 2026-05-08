@@ -13,11 +13,12 @@ export default function Barrios() {
       <div style={styles.inner}>
         <h2 style={styles.h2}>Explora los barrios de Madrid</h2>
         <p style={styles.subtitle}>Descubre las zonas con más demanda y encanto de la capital</p>
-        <div style={styles.grid}>
+        <div style={styles.grid} className="barrios-grid">
           {barrios.map((b) => (
             <a
               key={b.name}
               href="#"
+              className={b.featured ? "barrios-featured" : ""}
               style={{
                 ...styles.card,
                 ...(b.featured ? styles.featured : {}),

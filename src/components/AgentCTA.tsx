@@ -1,6 +1,6 @@
 export default function AgentCTA() {
   return (
-    <section style={styles.section}>
+    <section style={styles.section} className="agent-section">
       <div>
         <h2 style={styles.h2}>Habla con un agente de Korner Club</h2>
         <p style={styles.desc}>
@@ -20,7 +20,7 @@ export default function AgentCTA() {
           <button style={styles.btn}>Contactar agente</button>
         </div>
       </div>
-      <div style={styles.imageWrap}>
+      <div style={styles.imageWrap} className="agent-image">
         <img
           src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"
           alt="Agente Korner Club"

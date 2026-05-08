@@ -3,10 +3,10 @@
 import { useState } from "react";
 
 const languages = [
-  { code: "ES", flag: "🇪🇸", label: "Español" },
-  { code: "EN", flag: "🇬🇧", label: "English" },
-  { code: "FR", flag: "🇫🇷", label: "Français" },
-  { code: "DE", flag: "🇩🇪", label: "Deutsch" },
+  { code: "ES", flagCode: "es", label: "Español" },
+  { code: "EN", flagCode: "gb", label: "English" },
+  { code: "FR", flagCode: "fr", label: "Français" },
+  { code: "DE", flagCode: "de", label: "Deutsch" },
 ];
 
 export default function Navbar() {
@@ -47,7 +47,13 @@ export default function Navbar() {
               style={styles.langBtn}
               onClick={() => setLangOpen(!langOpen)}
             >
-              <span style={{ fontSize: 16 }}>{currentLang.flag}</span>
+              <img
+                src={`https://flagcdn.com/24x18/${currentLang.flagCode}.png`}
+                alt={currentLang.label}
+                width={24}
+                height={18}
+                style={{ display: "block", borderRadius: 2 }}
+              />
               <span>{currentLang.code}</span>
               <span style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
             </button>
@@ -67,7 +73,13 @@ export default function Navbar() {
                       setLangOpen(false);
                     }}
                   >
-                    <span style={{ fontSize: 16 }}>{lang.flag}</span>
+                    <img
+                      src={`https://flagcdn.com/24x18/${lang.flagCode}.png`}
+                      alt={lang.label}
+                      width={24}
+                      height={18}
+                      style={{ display: "block", borderRadius: 2 }}
+                    />
                     {lang.label}
                   </button>
                 ))}

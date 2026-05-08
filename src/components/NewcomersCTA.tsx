@@ -1,8 +1,8 @@
 export default function NewcomersCTA() {
   return (
     <section style={styles.section}>
-      <div style={styles.card}>
-        <div style={styles.text}>
+      <div style={styles.card} className="newcomers-card">
+        <div style={styles.text} className="newcomers-text">
           <div style={styles.badge}>🌍 Vivir en Madrid</div>
           <h2 style={styles.h2}>¿Acabas de llegar a Madrid?</h2>
           <p style={styles.desc}>
@@ -12,7 +12,7 @@ export default function NewcomersCTA() {
           </p>
           <button style={styles.btn}>Agenda una consulta gratuita →</button>
         </div>
-        <div style={styles.image} />
+        <div style={styles.image} className="newcomers-image" />
       </div>
     </section>
   );
