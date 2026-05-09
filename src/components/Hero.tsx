@@ -13,69 +13,78 @@ export default function Hero() {
   const [activeTab, setActiveTab] = useState("Comprar");
 
   return (
-    <section style={styles.hero}>
-      <div style={styles.heroBg} />
-      <div style={styles.heroContent}>
-        <h1 style={styles.h1}>
-          Tu próximo hogar en{" "}
-          <em style={{ fontStyle: "normal", color: "var(--gold-light)" }}>
-            Madrid
-          </em>{" "}
-          empieza aquí
-        </h1>
-        <p style={styles.sub}>
-          Compra, vende o alquila con el equipo que conoce cada{" "}
-          <span
-            style={{
-              fontFamily: "var(--font-playfair), serif",
-              fontWeight: 700,
-              color: "var(--gold-light)",
-              letterSpacing: 0.5,
-            }}
-          >
-            KORNER
-          </span>{" "}
-          de la ciudad
-        </p>
-
-        <div style={styles.searchBox}>
-          <div style={styles.searchTabs}>
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  ...styles.searchTab,
-                  ...(tab === activeTab ? styles.searchTabActive : {}),
-                }}
-              >
-                {tab}
-                {tab === activeTab && <span style={styles.tabIndicator} />}
-              </button>
-            ))}
-          </div>
-          <div style={styles.inputRow}>
-            <svg
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
+    <>
+      <style>{`
+        @media (max-width: 768px) {
+          .hero-sub { display: none; }
+          .hero-content { text-align: left !important; }
+          .hero-h1 { text-align: left !important; }
+        }
+      `}</style>
+      <section style={styles.hero}>
+        <div style={styles.heroBg} />
+        <div className="hero-content" style={styles.heroContent}>
+          <h1 className="hero-h1" style={styles.h1}>
+            Tu próximo hogar en{" "}
+            <em style={{ fontStyle: "normal", color: "var(--gold-light)" }}>
+              Madrid
+            </em>{" "}
+            empieza aquí.
+          </h1>
+          <p className="hero-sub" style={styles.sub}>
+            Compra, vende o alquila con el equipo que conoce cada{" "}
+            <span
+              style={{
+                fontFamily: "var(--font-playfair), serif",
+                fontWeight: 700,
+                color: "var(--gold-light)",
+                letterSpacing: 0.5,
+              }}
             >
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input
-              type="text"
-              placeholder={placeholders[activeTab]}
-              style={styles.input}
-            />
-            <button style={styles.searchBtn}>Buscar</button>
+              KORNER
+            </span>{" "}
+            de la ciudad
+          </p>
+
+          <div style={styles.searchBox}>
+            <div style={styles.searchTabs}>
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    ...styles.searchTab,
+                    ...(tab === activeTab ? styles.searchTabActive : {}),
+                  }}
+                >
+                  {tab}
+                  {tab === activeTab && <span style={styles.tabIndicator} />}
+                </button>
+              ))}
+            </div>
+            <div style={styles.inputRow}>
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="M21 21l-4.35-4.35" />
+              </svg>
+              <input
+                type="text"
+                placeholder={placeholders[activeTab]}
+                style={styles.input}
+              />
+              <button style={styles.searchBtn}>Buscar</button>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 

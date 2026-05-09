@@ -36,6 +36,8 @@ export default function Navbar() {
         .nb-btn-text { display: inline; margin-left: 6px; }
         .nb-mobile-menu { display: none; flex-direction: column; border-top: 1px solid var(--border); background: white; }
         .nb-mobile-menu.open { display: flex; }
+        .nb-lang-desktop { display: flex; }
+        .nb-lang-mobile { display: none; }
 
         @media (max-width: 768px) {
           .nb-nav-links { display: none !important; }
@@ -43,18 +45,25 @@ export default function Navbar() {
           .nb-lang-code { display: none; }
           .nb-lang-chevron { display: none; }
           .nb-btn-text { display: none; }
+          .nb-lang-desktop { display: none; }
+          .nb-lang-mobile { display: block; }
+
+          .nb-logo { gap: 5px !important; }
+          .nb-logo-text-wrap { font-size: 14px !important; letter-spacing: -0.3px !important; }
+          .nb-logo-k { font-size: 26px !important; }
+          .nb-actions { gap: 4px !important; }
         }
       `}</style>
 
       <nav style={styles.navbar}>
         <div style={styles.inner}>
-          {/* Logo — always visible, full text */}
-          <a href="/" style={styles.logo}>
+          {/* Logo */}
+          <a href="/" className="nb-logo" style={styles.logo}>
             <div style={styles.logoMark}>
-              <span style={styles.logoK}>K</span>
+              <span className="nb-logo-k" style={styles.logoK}>K</span>
               <div style={styles.logoCorner} />
             </div>
-            <div style={styles.logoTextWrap}>
+            <div className="nb-logo-text-wrap" style={styles.logoTextWrap}>
               KORNER <span style={styles.logoTextSpan}>&nbsp;CLUB</span>
             </div>
           </a>
@@ -77,9 +86,9 @@ export default function Navbar() {
           </ul>
 
           {/* Actions */}
-          <div style={styles.actions}>
-            {/* Language selector */}
-            <div style={{ position: "relative" }}>
+          <div className="nb-actions" style={styles.actions}>
+            {/* Language selector — desktop only */}
+            <div className="nb-lang-desktop" style={{ position: "relative" }}>
               <button
                 style={styles.langBtn}
                 onClick={() => setLangOpen((o) => !o)}
@@ -124,13 +133,13 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Iniciar sesión — no border */}
+            {/* Iniciar sesión */}
             <button style={styles.btnOutline}>
               <IconUser />
               <span className="nb-btn-text">Iniciar sesión</span>
             </button>
 
-            {/* Hamburger — mobile only, top right, no border */}
+            {/* Hamburger — mobile only, top right */}
             <button
               className="nb-hamburger"
               style={styles.hamburger}
@@ -153,7 +162,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile dropdown menu — includes Contacto at the end */}
+        {/* Mobile dropdown menu */}
         <div className={`nb-mobile-menu${menuOpen ? " open" : ""}`}>
           {MOBILE_NAV_ITEMS.map((item, i) => (
             <a
@@ -168,6 +177,35 @@ export default function Navbar() {
               {item}
             </a>
           ))}
+
+          {/* Language selector — mobile, inside menu */}
+          <div className="nb-lang-mobile" style={styles.mobileLangSection}>
+            <span style={styles.mobileLangTitle}>Idioma</span>
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                style={{
+                  ...styles.mobileLangOption,
+                  ...(lang.code === currentLang.code
+                    ? { color: "var(--gold-dark)", fontWeight: 600 }
+                    : {}),
+                }}
+                onClick={() => {
+                  setCurrentLang(lang);
+                  setMenuOpen(false);
+                }}
+              >
+                <img
+                  src={`https://flagcdn.com/20x15/${lang.flagCode}.png`}
+                  alt={lang.label}
+                  width={20}
+                  height={15}
+                  style={{ display: "block", borderRadius: 2 }}
+                />
+                {lang.label}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
     </>
@@ -344,5 +382,33 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     fontFamily: "inherit",
     whiteSpace: "nowrap",
+  },
+  mobileLangSection: {
+    borderTop: "1px solid var(--border)",
+    padding: "12px 24px 16px",
+  },
+  mobileLangTitle: {
+    display: "block",
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+    color: "var(--mid-gray)",
+    marginBottom: 10,
+  },
+  mobileLangOption: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "8px 0",
+    fontSize: 14,
+    fontWeight: 500,
+    color: "var(--text)",
+    cursor: "pointer",
+    border: "none",
+    background: "none",
+    width: "100%",
+    fontFamily: "inherit",
+    textAlign: "left" as const,
   },
 };
