@@ -9,23 +9,54 @@ const languages = [
   { code: "DE", flagCode: "de", label: "Deutsch" },
 ];
 
+const NAV_ITEMS = ["Comprar", "Alquilar", "Vender", "Vivir en Madrid", "Servicio de Concierge"];
+
 export default function Navbar() {
   const [langOpen, setLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState(languages[0]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav style={styles.navbar}>
-      <div style={styles.inner}>
-        <a href="/" style={styles.logo}>
-          <div style={styles.logoMark}>K</div>
-          <div style={styles.logoText}>
-            KORNER <span style={styles.logoTextSpan}>CLUB</span>
-          </div>
-        </a>
+    <>
+      <style>{`
+        .nb-logo-text { display: flex; align-items: center; }
+        .nb-nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+        .nb-hamburger { display: none; }
+        .nb-lang-code { display: inline; }
+        .nb-lang-chevron { display: inline; }
+        .nb-contactar { display: inline-flex; }
+        .nb-mobile-menu { display: none; flex-direction: column; border-top: 1px solid var(--border); background: white; }
+        .nb-mobile-menu.open { display: flex; }
 
-        <ul style={styles.navLinks}>
-          {["Comprar", "Alquilar", "Vender", "Vivir en Madrid", "Servicio de Concierge"].map(
-            (item, i) => (
+        @media (max-width: 768px) {
+          .nb-logo-text { display: none; }
+          .nb-nav-links { display: none !important; }
+          .nb-hamburger { display: flex; align-items: center; justify-content: center; }
+          .nb-lang-code { display: none; }
+          .nb-lang-chevron { display: none; }
+        }
+
+        @media (max-width: 460px) {
+          .nb-contactar { display: none; }
+        }
+      `}</style>
+
+      <nav style={styles.navbar}>
+        <div style={styles.inner}>
+          {/* Logo */}
+          <a href="/" style={styles.logo}>
+            <div style={styles.logoMark}>
+              <span style={styles.logoK}>K</span>
+              <div style={styles.logoCorner} />
+            </div>
+            <div className="nb-logo-text" style={styles.logoTextWrap}>
+              KORNER <span style={styles.logoTextSpan}>&nbsp;CLUB</span>
+            </div>
+          </a>
+
+          {/* Desktop nav links */}
+          <ul className="nb-nav-links" style={styles.navLinks}>
+            {NAV_ITEMS.map((item, i) => (
               <li key={item}>
                 <a
                   href="#"
@@ -37,60 +68,101 @@ export default function Navbar() {
                   {item}
                 </a>
               </li>
-            )
-          )}
-        </ul>
+            ))}
+          </ul>
 
-        <div style={styles.actions}>
-          <div style={{ position: "relative" }}>
+          {/* Actions */}
+          <div style={styles.actions}>
+            {/* Hamburger — mobile only */}
             <button
-              style={styles.langBtn}
-              onClick={() => setLangOpen(!langOpen)}
+              className="nb-hamburger"
+              style={styles.hamburger}
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Menú"
             >
-              <img
-                src={`https://flagcdn.com/24x18/${currentLang.flagCode}.png`}
-                alt={currentLang.label}
-                width={24}
-                height={18}
-                style={{ display: "block", borderRadius: 2 }}
-              />
-              <span>{currentLang.code}</span>
-              <span style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
+              {menuOpen ? (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="4" y1="4" x2="16" y2="16" />
+                  <line x1="16" y1="4" x2="4" y2="16" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="3" y1="6" x2="17" y2="6" />
+                  <line x1="3" y1="10" x2="17" y2="10" />
+                  <line x1="3" y1="14" x2="17" y2="14" />
+                </svg>
+              )}
             </button>
-            {langOpen && (
-              <div style={styles.langDropdown}>
-                {languages.map((lang) => (
-                  <button
-                    key={lang.code}
-                    style={{
-                      ...styles.langOption,
-                      ...(lang.code === currentLang.code
-                        ? { color: "var(--gold-dark)", fontWeight: 600 }
-                        : {}),
-                    }}
-                    onClick={() => {
-                      setCurrentLang(lang);
-                      setLangOpen(false);
-                    }}
-                  >
-                    <img
-                      src={`https://flagcdn.com/24x18/${lang.flagCode}.png`}
-                      alt={lang.label}
-                      width={24}
-                      height={18}
-                      style={{ display: "block", borderRadius: 2 }}
-                    />
-                    {lang.label}
-                  </button>
-                ))}
-              </div>
-            )}
+
+            {/* Language selector */}
+            <div style={{ position: "relative" }}>
+              <button
+                style={styles.langBtn}
+                onClick={() => setLangOpen((o) => !o)}
+              >
+                <img
+                  src={`https://flagcdn.com/24x18/${currentLang.flagCode}.png`}
+                  alt={currentLang.label}
+                  width={24}
+                  height={18}
+                  style={{ display: "block", borderRadius: 2 }}
+                />
+                <span className="nb-lang-code">{currentLang.code}</span>
+                <span className="nb-lang-chevron" style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
+              </button>
+              {langOpen && (
+                <div style={styles.langDropdown}>
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      style={{
+                        ...styles.langOption,
+                        ...(lang.code === currentLang.code
+                          ? { color: "var(--gold-dark)", fontWeight: 600 }
+                          : {}),
+                      }}
+                      onClick={() => {
+                        setCurrentLang(lang);
+                        setLangOpen(false);
+                      }}
+                    >
+                      <img
+                        src={`https://flagcdn.com/24x18/${lang.flagCode}.png`}
+                        alt={lang.label}
+                        width={24}
+                        height={18}
+                        style={{ display: "block", borderRadius: 2 }}
+                      />
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button style={styles.btnOutline}>Iniciar sesión</button>
+            <button className="nb-contactar" style={styles.btnPrimary}>Contactar</button>
           </div>
-          <button style={styles.btnOutline}>Iniciar sesión</button>
-          <button style={styles.btnPrimary}>Contactar</button>
         </div>
-      </div>
-    </nav>
+
+        {/* Mobile dropdown menu */}
+        <div className={`nb-mobile-menu${menuOpen ? " open" : ""}`}>
+          {NAV_ITEMS.map((item, i) => (
+            <a
+              key={item}
+              href="#"
+              style={{
+                ...styles.mobileNavLink,
+                ...(i === 0 ? styles.navLinkActive : {}),
+              }}
+              onClick={() => setMenuOpen(false)}
+            >
+              {item}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </>
   );
 }
 
@@ -101,15 +173,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     zIndex: 100,
     background: "white",
     borderBottom: "1px solid var(--border)",
-    height: "var(--nav-height)",
+    minHeight: "var(--nav-height)",
     display: "flex",
-    alignItems: "center",
+    flexDirection: "column",
   },
   inner: {
     maxWidth: "var(--max-width)",
     width: "100%",
     margin: "0 auto",
     padding: "0 24px",
+    height: "var(--nav-height)",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -120,8 +193,10 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: 10,
     textDecoration: "none",
     color: "var(--black)",
+    flexShrink: 0,
   },
   logoMark: {
+    position: "relative",
     width: 36,
     height: 36,
     background: "var(--black)",
@@ -129,16 +204,33 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
+  },
+  logoK: {
     color: "var(--gold)",
     fontFamily: "var(--font-playfair), serif",
     fontWeight: 700,
     fontSize: 20,
+    lineHeight: 1,
+    position: "relative",
+    zIndex: 1,
   },
-  logoText: {
+  logoCorner: {
+    position: "absolute",
+    bottom: 3,
+    right: 3,
+    width: 8,
+    height: 8,
+    borderBottom: "2.5px solid var(--gold)",
+    borderRight: "2.5px solid var(--gold)",
+    borderRadius: "0 0 2px 0",
+  },
+  logoTextWrap: {
     fontFamily: "var(--font-playfair), serif",
     fontWeight: 700,
     fontSize: 18,
     letterSpacing: 0.5,
+    whiteSpace: "nowrap",
   },
   logoTextSpan: {
     fontWeight: 400,
@@ -149,6 +241,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: "center",
     gap: 4,
     listStyle: "none",
+    margin: 0,
+    padding: 0,
   },
   navLink: {
     textDecoration: "none",
@@ -163,10 +257,29 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: "var(--gold-dark)",
     fontWeight: 600,
   },
+  mobileNavLink: {
+    textDecoration: "none",
+    color: "var(--text)",
+    fontSize: 15,
+    fontWeight: 500,
+    padding: "14px 24px",
+    borderBottom: "1px solid var(--border)",
+    display: "block",
+  },
   actions: {
     display: "flex",
     alignItems: "center",
     gap: 8,
+    flexShrink: 0,
+  },
+  hamburger: {
+    padding: "8px",
+    border: "1.5px solid var(--border)",
+    borderRadius: 6,
+    background: "none",
+    cursor: "pointer",
+    color: "var(--text)",
+    lineHeight: 0,
   },
   langBtn: {
     display: "flex",
