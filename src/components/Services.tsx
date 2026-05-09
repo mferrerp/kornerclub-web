@@ -16,7 +16,7 @@ const services = [
   {
     icon: "📈",
     iconBg: "#fff3e0",
-    title: "Vender",
+    title: "Propietario (Vender/Alquilar)",
     desc: "Valoración gratuita, fotografía profesional y marketing digital. Vendemos tu propiedad al mejor precio del mercado.",
     link: "Solicitar valoración",
   },
