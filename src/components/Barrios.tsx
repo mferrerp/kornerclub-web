@@ -1,10 +1,10 @@
 const barrios = [
   { name: "Salamanca", price: "Desde €3.200/m² — Lujo y exclusividad", img: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?w=800&q=80", featured: true },
-  { name: "Chamberí", price: "Desde €2.800/m²", img: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&q=80" },
-  { name: "Malasaña", price: "Desde €2.400/m²", img: "https://images.unsplash.com/photo-1570698473651-b2de1fca6347?w=400&q=80" },
+  { name: "Chamberí", price: "Desde €2.800/m²", img: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80" },
+  { name: "Malasaña", price: "Desde €2.400/m²", img: "https://images.unsplash.com/8IK6h5Wsg6k?w=400&q=80" },
   { name: "La Latina", price: "Desde €2.200/m²", img: "https://images.unsplash.com/photo-1509027572446-af8401acfdc3?w=400&q=80" },
   { name: "Retiro", price: "Desde €2.600/m²", img: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&q=80" },
-  { name: "Chueca", price: "Desde €2.500/m²", img: "https://images.unsplash.com/photo-1594398901394-4e34939a02e6?w=400&q=80" },
+  { name: "Chueca", price: "Desde €2.500/m²", img: "https://images.unsplash.com/photo-1585202900695-f08e8e2a9cc6?w=400&q=80" },
 ];
 
 export default function Barrios() {
