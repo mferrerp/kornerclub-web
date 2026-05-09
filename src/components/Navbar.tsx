@@ -9,7 +9,7 @@ const languages = [
   { code: "DE", flagCode: "de", label: "Deutsch" },
 ];
 
-const NAV_ITEMS = ["Comprar", "Alquilar", "Vender", "Vivir en Madrid", "Servicio de Concierge"];
+const NAV_ITEMS = ["Comprar", "Alquilar", "Propietario", "Vivir en Madrid", "Servicio de Concierge"];
 const MOBILE_NAV_ITEMS = [...NAV_ITEMS, "Contacto"];
 
 function IconUser() {
@@ -49,7 +49,7 @@ export default function Navbar() {
           .nb-lang-mobile { display: block; }
 
           .nb-logo { gap: 5px !important; }
-          .nb-logo-text-wrap { font-size: 14px !important; letter-spacing: -0.3px !important; }
+          .nb-logo-text-wrap { font-size: 21px !important; letter-spacing: -0.3px !important; }
           .nb-logo-k { font-size: 26px !important; }
           .nb-actions { gap: 4px !important; }
         }

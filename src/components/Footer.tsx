@@ -8,7 +8,7 @@ const columns = [
     links: ["Pisos en alquiler", "Estudios", "Alquiler temporal", "Guía del inquilino"],
   },
   {
-    title: "Vender",
+    title: "Propietario",
     links: ["Por qué Korner Club", "Home staging", "Guía del vendedor"],
   },
   {
