@@ -58,7 +58,8 @@ export default function Navbar() {
 
       <nav style={styles.navbar}>
         <div style={styles.inner}>
-          {/* Hamburger — left of logo on mobile */}
+          {/* Logo group: hamburger + logo stay adjacent on mobile */}
+          <div style={styles.logoGroup}>
           <button
             className="nb-hamburger"
             style={styles.hamburger}
@@ -89,6 +90,7 @@ export default function Navbar() {
               KORNER <span style={styles.logoTextSpan}>&nbsp;CLUB</span>
             </div>
           </a>
+          </div>{/* end logoGroup */}
 
           {/* Desktop nav links */}
           <ul className="nb-nav-links" style={styles.navLinks}>
@@ -208,6 +210,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
+  },
+  logoGroup: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 0,
   },
   logo: {
     display: "flex",
