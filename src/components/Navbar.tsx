@@ -9,41 +9,57 @@ const languages = [
   { code: "DE", flagCode: "de", label: "Deutsch" },
 ];
 
+const navItems = ["Comprar", "Alquilar", "Vender", "Vivir en Madrid", "Servicio de Concierge"];
+
 export default function Navbar() {
   const [langOpen, setLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState(languages[0]);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <nav style={styles.navbar}>
-      <div style={styles.inner}>
-        <a href="/" style={styles.logo}>
-          <div style={styles.logoMark}>K</div>
-          <div style={styles.logoText}>
-            KORNER <span style={styles.logoTextSpan}>CLUB</span>
-          </div>
-        </a>
+      <div className="nav-inner" style={styles.inner}>
+        {/* Left group: hamburger (mobile only) + logo */}
+        <div style={styles.leftGroup}>
+          <button
+            className="nav-hamburger"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+          <a href="/" style={styles.logo}>
+            <div className="nav-logo-mark" style={styles.logoMark}>K</div>
+            <div className="nav-logo-text" style={styles.logoText}>
+              KORNER <span style={styles.logoTextSpan}>CLUB</span>
+            </div>
+          </a>
+        </div>
 
-        <ul style={styles.navLinks}>
-          {["Comprar", "Alquilar", "Vender", "Vivir en Madrid", "Servicio de Concierge"].map(
-            (item, i) => (
-              <li key={item}>
-                <a
-                  href="#"
-                  style={{
-                    ...styles.navLink,
-                    ...(i === 0 ? styles.navLinkActive : {}),
-                  }}
-                >
-                  {item}
-                </a>
-              </li>
-            )
-          )}
+        {/* Nav links — hidden on mobile */}
+        <ul className="nav-nav-links" style={styles.navLinks}>
+          {navItems.map((item, i) => (
+            <li key={item}>
+              <a
+                href="#"
+                style={{
+                  ...styles.navLink,
+                  ...(i === 0 ? styles.navLinkActive : {}),
+                }}
+              >
+                {item}
+              </a>
+            </li>
+          ))}
         </ul>
 
+        {/* Actions */}
         <div style={styles.actions}>
           <div style={{ position: "relative" }}>
             <button
+              className="nav-lang-btn"
               style={styles.langBtn}
               onClick={() => setLangOpen(!langOpen)}
             >
@@ -54,8 +70,8 @@ export default function Navbar() {
                 height={18}
                 style={{ display: "block", borderRadius: 2 }}
               />
-              <span>{currentLang.code}</span>
-              <span style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
+              <span className="nav-lang-code">{currentLang.code}</span>
+              <span className="nav-lang-arrow" style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
             </button>
             {langOpen && (
               <div style={styles.langDropdown}>
@@ -86,10 +102,29 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          <button style={styles.btnOutline}>Iniciar sesión</button>
-          <button style={styles.btnPrimary}>Contactar</button>
+          <button className="nav-btn-iniciar" style={styles.btnOutline}>Iniciar sesión</button>
+          <button className="nav-btn-contactar" style={styles.btnPrimary}>Contactar</button>
         </div>
       </div>
+
+      {/* Mobile dropdown menu — rendered only when open; CSS hides it on desktop */}
+      {mobileOpen && (
+        <div className="nav-mobile-menu">
+          {navItems.map((item, i) => (
+            <a
+              key={item}
+              href="#"
+              style={{
+                ...styles.mobileNavLink,
+                ...(i === 0 ? { color: "var(--gold-dark)", fontWeight: 600 } : {}),
+              }}
+              onClick={() => setMobileOpen(false)}
+            >
+              {item}
+            </a>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }
@@ -113,6 +148,13 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+    height: "100%",
+  },
+  leftGroup: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    flexShrink: 0,
   },
   logo: {
     display: "flex",
@@ -167,6 +209,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: "flex",
     alignItems: "center",
     gap: 8,
+    flexShrink: 0,
   },
   langBtn: {
     display: "flex",
@@ -232,5 +275,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     fontFamily: "inherit",
     whiteSpace: "nowrap",
+  },
+  mobileNavLink: {
+    display: "block",
+    textDecoration: "none",
+    color: "var(--text)",
+    fontSize: 15,
+    fontWeight: 500,
+    padding: "14px 24px",
+    borderBottom: "1px solid var(--border)",
   },
 };
