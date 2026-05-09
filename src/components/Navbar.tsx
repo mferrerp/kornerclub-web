@@ -64,7 +64,7 @@ export default function Navbar() {
               <div style={styles.logoCorner} />
             </div>
             <div className="nb-logo-text-wrap" style={styles.logoTextWrap}>
-              KORNER <span style={styles.logoTextSpan}>&nbsp;CLUB</span>
+              KORNER<span style={styles.logoTextSpan}> CLUB</span>
             </div>
           </a>
 
