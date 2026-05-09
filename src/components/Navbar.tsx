@@ -11,6 +11,24 @@ const languages = [
 
 const NAV_ITEMS = ["Comprar", "Alquilar", "Vender", "Vivir en Madrid", "Servicio de Concierge"];
 
+function IconUser() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function IconMail() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
+
 export default function Navbar() {
   const [langOpen, setLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState(languages[0]);
@@ -24,7 +42,7 @@ export default function Navbar() {
         .nb-hamburger { display: none; }
         .nb-lang-code { display: inline; }
         .nb-lang-chevron { display: inline; }
-        .nb-contactar { display: inline-flex; }
+        .nb-btn-text { display: inline; margin-left: 6px; }
         .nb-mobile-menu { display: none; flex-direction: column; border-top: 1px solid var(--border); background: white; }
         .nb-mobile-menu.open { display: flex; }
 
@@ -34,15 +52,33 @@ export default function Navbar() {
           .nb-hamburger { display: flex; align-items: center; justify-content: center; }
           .nb-lang-code { display: none; }
           .nb-lang-chevron { display: none; }
-        }
-
-        @media (max-width: 460px) {
-          .nb-contactar { display: none; }
+          .nb-btn-text { display: none; }
         }
       `}</style>
 
       <nav style={styles.navbar}>
         <div style={styles.inner}>
+          {/* Hamburger — left of logo on mobile */}
+          <button
+            className="nb-hamburger"
+            style={styles.hamburger}
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Menú"
+          >
+            {menuOpen ? (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="4" y1="4" x2="16" y2="16" />
+                <line x1="16" y1="4" x2="4" y2="16" />
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="17" y2="6" />
+                <line x1="3" y1="10" x2="17" y2="10" />
+                <line x1="3" y1="14" x2="17" y2="14" />
+              </svg>
+            )}
+          </button>
+
           {/* Logo */}
           <a href="/" style={styles.logo}>
             <div style={styles.logoMark}>
@@ -73,27 +109,6 @@ export default function Navbar() {
 
           {/* Actions */}
           <div style={styles.actions}>
-            {/* Hamburger — mobile only */}
-            <button
-              className="nb-hamburger"
-              style={styles.hamburger}
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Menú"
-            >
-              {menuOpen ? (
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="4" y1="4" x2="16" y2="16" />
-                  <line x1="16" y1="4" x2="4" y2="16" />
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="3" y1="6" x2="17" y2="6" />
-                  <line x1="3" y1="10" x2="17" y2="10" />
-                  <line x1="3" y1="14" x2="17" y2="14" />
-                </svg>
-              )}
-            </button>
-
             {/* Language selector */}
             <div style={{ position: "relative" }}>
               <button
@@ -140,8 +155,14 @@ export default function Navbar() {
               )}
             </div>
 
-            <button style={styles.btnOutline}>Iniciar sesión</button>
-            <button className="nb-contactar" style={styles.btnPrimary}>Contactar</button>
+            <button style={styles.btnOutline}>
+              <IconUser />
+              <span className="nb-btn-text">Iniciar sesión</span>
+            </button>
+            <button style={styles.btnPrimary}>
+              <IconMail />
+              <span className="nb-btn-text">Contactar</span>
+            </button>
           </div>
         </div>
 
@@ -186,6 +207,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: 8,
   },
   logo: {
     display: "flex",
@@ -280,6 +302,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     color: "var(--text)",
     lineHeight: 0,
+    flexShrink: 0,
   },
   langBtn: {
     display: "flex",
@@ -323,6 +346,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     textAlign: "left" as const,
   },
   btnOutline: {
+    display: "flex",
+    alignItems: "center",
     padding: "7px 14px",
     border: "1.5px solid var(--border)",
     borderRadius: 6,
@@ -335,6 +360,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     whiteSpace: "nowrap",
   },
   btnPrimary: {
+    display: "flex",
+    alignItems: "center",
     padding: "7px 14px",
     border: "1.5px solid var(--gold)",
     borderRadius: 6,
