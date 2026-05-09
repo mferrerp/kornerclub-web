@@ -9,22 +9,14 @@ const languages = [
   { code: "DE", flagCode: "de", label: "Deutsch" },
 ];
 
-const NAV_ITEMS = ["Comprar", "Alquilar", "Vender", "Vivir en Madrid", "Servicio de Concierge"];
+const NAV_ITEMS = ["Comprar", "Alquilar", "Propietario", "Vivir en Madrid", "Servicio de Concierge"];
+const MOBILE_NAV_ITEMS = [...NAV_ITEMS, "Contacto"];
 
 function IconUser() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
-function IconMail() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
   );
 }
@@ -37,7 +29,6 @@ export default function Navbar() {
   return (
     <>
       <style>{`
-        .nb-logo-text { display: flex; align-items: center; }
         .nb-nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
         .nb-hamburger { display: none; }
         .nb-lang-code { display: inline; }
@@ -45,52 +36,37 @@ export default function Navbar() {
         .nb-btn-text { display: inline; margin-left: 6px; }
         .nb-mobile-menu { display: none; flex-direction: column; border-top: 1px solid var(--border); background: white; }
         .nb-mobile-menu.open { display: flex; }
+        .nb-lang-desktop { display: flex; }
+        .nb-lang-mobile { display: none; }
 
         @media (max-width: 768px) {
-          .nb-logo-text { display: none; }
           .nb-nav-links { display: none !important; }
           .nb-hamburger { display: flex; align-items: center; justify-content: center; }
           .nb-lang-code { display: none; }
           .nb-lang-chevron { display: none; }
           .nb-btn-text { display: none; }
+          .nb-lang-desktop { display: none; }
+          .nb-lang-mobile { display: block; }
+
+          .nb-logo { gap: 5px !important; }
+          .nb-logo-text-wrap { font-size: 21px !important; letter-spacing: -0.3px !important; }
+          .nb-logo-k { font-size: 26px !important; }
+          .nb-actions { gap: 4px !important; }
         }
       `}</style>
 
       <nav style={styles.navbar}>
         <div style={styles.inner}>
-          {/* Logo group: hamburger + logo stay adjacent on mobile */}
-          <div style={styles.logoGroup}>
-          <button
-            className="nb-hamburger"
-            style={styles.hamburger}
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Menú"
-          >
-            {menuOpen ? (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="4" y1="4" x2="16" y2="16" />
-                <line x1="16" y1="4" x2="4" y2="16" />
-              </svg>
-            ) : (
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="3" y1="6" x2="17" y2="6" />
-                <line x1="3" y1="10" x2="17" y2="10" />
-                <line x1="3" y1="14" x2="17" y2="14" />
-              </svg>
-            )}
-          </button>
-
           {/* Logo */}
-          <a href="/" style={styles.logo}>
+          <a href="/" className="nb-logo" style={styles.logo}>
             <div style={styles.logoMark}>
-              <span style={styles.logoK}>K</span>
+              <span className="nb-logo-k" style={styles.logoK}>K</span>
               <div style={styles.logoCorner} />
             </div>
-            <div className="nb-logo-text" style={styles.logoTextWrap}>
+            <div className="nb-logo-text-wrap" style={styles.logoTextWrap}>
               KORNER <span style={styles.logoTextSpan}>&nbsp;CLUB</span>
             </div>
           </a>
-          </div>{/* end logoGroup */}
 
           {/* Desktop nav links */}
           <ul className="nb-nav-links" style={styles.navLinks}>
@@ -110,9 +86,9 @@ export default function Navbar() {
           </ul>
 
           {/* Actions */}
-          <div style={styles.actions}>
-            {/* Language selector */}
-            <div style={{ position: "relative" }}>
+          <div className="nb-actions" style={styles.actions}>
+            {/* Language selector — desktop only */}
+            <div className="nb-lang-desktop" style={{ position: "relative" }}>
               <button
                 style={styles.langBtn}
                 onClick={() => setLangOpen((o) => !o)}
@@ -144,10 +120,10 @@ export default function Navbar() {
                       }}
                     >
                       <img
-                        src={`https://flagcdn.com/24x18/${lang.flagCode}.png`}
+                        src={`https://flagcdn.com/20x15/${lang.flagCode}.png`}
                         alt={lang.label}
-                        width={24}
-                        height={18}
+                        width={20}
+                        height={15}
                         style={{ display: "block", borderRadius: 2 }}
                       />
                       {lang.label}
@@ -157,20 +133,38 @@ export default function Navbar() {
               )}
             </div>
 
+            {/* Iniciar sesión */}
             <button style={styles.btnOutline}>
               <IconUser />
               <span className="nb-btn-text">Iniciar sesión</span>
             </button>
-            <button style={styles.btnPrimary}>
-              <IconMail />
-              <span className="nb-btn-text">Contactar</span>
+
+            {/* Hamburger — mobile only, top right */}
+            <button
+              className="nb-hamburger"
+              style={styles.hamburger}
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Menú"
+            >
+              {menuOpen ? (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="4" y1="4" x2="16" y2="16" />
+                  <line x1="16" y1="4" x2="4" y2="16" />
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="3" y1="6" x2="17" y2="6" />
+                  <line x1="3" y1="10" x2="17" y2="10" />
+                  <line x1="3" y1="14" x2="17" y2="14" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
 
         {/* Mobile dropdown menu */}
         <div className={`nb-mobile-menu${menuOpen ? " open" : ""}`}>
-          {NAV_ITEMS.map((item, i) => (
+          {MOBILE_NAV_ITEMS.map((item, i) => (
             <a
               key={item}
               href="#"
@@ -183,6 +177,35 @@ export default function Navbar() {
               {item}
             </a>
           ))}
+
+          {/* Language selector — mobile, inside menu */}
+          <div className="nb-lang-mobile" style={styles.mobileLangSection}>
+            <span style={styles.mobileLangTitle}>Idioma</span>
+            {languages.map((lang) => (
+              <button
+                key={lang.code}
+                style={{
+                  ...styles.mobileLangOption,
+                  ...(lang.code === currentLang.code
+                    ? { color: "var(--gold-dark)", fontWeight: 600 }
+                    : {}),
+                }}
+                onClick={() => {
+                  setCurrentLang(lang);
+                  setMenuOpen(false);
+                }}
+              >
+                <img
+                  src={`https://flagcdn.com/20x15/${lang.flagCode}.png`}
+                  alt={lang.label}
+                  width={20}
+                  height={15}
+                  style={{ display: "block", borderRadius: 2 }}
+                />
+                {lang.label}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
     </>
@@ -210,12 +233,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
-  },
-  logoGroup: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    flexShrink: 0,
   },
   logo: {
     display: "flex",
@@ -304,8 +321,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   hamburger: {
     padding: "8px",
-    border: "1.5px solid var(--border)",
-    borderRadius: 6,
+    border: "none",
     background: "none",
     cursor: "pointer",
     color: "var(--text)",
@@ -343,7 +359,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: "center",
     gap: 8,
     padding: "10px 14px",
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: 500,
     color: "var(--text)",
     cursor: "pointer",
@@ -357,7 +373,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: "flex",
     alignItems: "center",
     padding: "7px 14px",
-    border: "1.5px solid var(--border)",
+    border: "none",
     borderRadius: 6,
     background: "none",
     fontSize: 14,
@@ -367,18 +383,32 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontFamily: "inherit",
     whiteSpace: "nowrap",
   },
-  btnPrimary: {
+  mobileLangSection: {
+    borderTop: "1px solid var(--border)",
+    padding: "12px 24px 16px",
+  },
+  mobileLangTitle: {
+    display: "block",
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+    color: "var(--mid-gray)",
+    marginBottom: 10,
+  },
+  mobileLangOption: {
     display: "flex",
     alignItems: "center",
-    padding: "7px 14px",
-    border: "1.5px solid var(--gold)",
-    borderRadius: 6,
-    background: "var(--gold)",
-    color: "white",
+    gap: 10,
+    padding: "8px 0",
     fontSize: 14,
-    fontWeight: 600,
+    fontWeight: 500,
+    color: "var(--text)",
     cursor: "pointer",
+    border: "none",
+    background: "none",
+    width: "100%",
     fontFamily: "inherit",
-    whiteSpace: "nowrap",
+    textAlign: "left" as const,
   },
 };

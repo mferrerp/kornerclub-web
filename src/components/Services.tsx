@@ -16,7 +16,7 @@ const services = [
   {
     icon: "📈",
     iconBg: "#fff3e0",
-    title: "Vender",
+    title: "Propietario (Vender/Alquilar)",
     desc: "Valoración gratuita, fotografía profesional y marketing digital. Vendemos tu propiedad al mejor precio del mercado.",
     link: "Solicitar valoración",
   },
@@ -31,7 +31,13 @@ const services = [
 
 export default function Services() {
   return (
-    <section style={styles.section}>
+    <>
+      <style>{`
+        @media (max-width: 768px) {
+          .services-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <section style={styles.section}>
       <div style={styles.heading}>
         <h2 style={styles.h2}>¿Qué necesitas?</h2>
         <p style={styles.subtitle}>
@@ -56,6 +62,7 @@ export default function Services() {
         ))}
       </div>
     </section>
+    </>
   );
 }
 
