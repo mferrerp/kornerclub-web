@@ -28,7 +28,7 @@
 }
 
 body {
-  font-family: "DM Sans", sans-serif;
+  font-family: var(--font-libre-franklin), "Libre Franklin", sans-serif;
   color: var(--text);
   background: var(--off-white);
   -webkit-font-smoothing: antialiased;
