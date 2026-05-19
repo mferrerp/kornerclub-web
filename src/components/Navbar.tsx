@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Lang } from "@/lib/i18n";
 
-const languages = [
-  { code: "ES", flagCode: "es", label: "Español" },
-  { code: "EN", flagCode: "gb", label: "English" },
-  { code: "FR", flagCode: "fr", label: "Français" },
-  { code: "DE", flagCode: "de", label: "Deutsch" },
+const languages: { code: Lang; flagCode: string; label: string }[] = [
+  { code: "es", flagCode: "es", label: "Español" },
+  { code: "en", flagCode: "gb", label: "English" },
+  { code: "fr", flagCode: "fr", label: "Français" },
+  { code: "de", flagCode: "de", label: "Deutsch" },
 ];
 
-const NAV_ITEMS = ["Comprar", "Alquilar", "Propietario", "Vivir en Madrid", "Servicio de Concierge"];
-const MOBILE_NAV_ITEMS = [...NAV_ITEMS, "Contacto"];
+const NAV_HREFS = ["#", "#", "#", "#", "#", "#contacto"];
 
 function IconUser() {
   return (
@@ -22,9 +23,11 @@ function IconUser() {
 }
 
 export default function Navbar() {
+  const { lang, setLang, t } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState(languages[0]);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const currentLang = languages.find((l) => l.code === lang) ?? languages[0];
 
   return (
     <>
@@ -59,10 +62,7 @@ export default function Navbar() {
         <div style={styles.inner}>
           {/* Logo */}
           <a href="/" className="nb-logo" style={styles.logo}>
-            <div style={styles.logoMark}>
-              <span className="nb-logo-k" style={styles.logoK}>K</span>
-              <div style={styles.logoCorner} />
-            </div>
+            <img src="/logo-icon.png" alt="Korner Club" style={styles.logoMark} />
             <div className="nb-logo-text-wrap" style={styles.logoTextWrap}>
               KORNER<span style={{ ...styles.logoTextSpan, marginLeft: 2 }}>CLUB</span>
             </div>
@@ -70,17 +70,9 @@ export default function Navbar() {
 
           {/* Desktop nav links */}
           <ul className="nb-nav-links" style={styles.navLinks}>
-            {NAV_ITEMS.map((item, i) => (
+            {t.nav.items.map((item, i) => (
               <li key={item}>
-                <a
-                  href="#"
-                  style={{
-                    ...styles.navLink,
-                    ...(i === 0 ? styles.navLinkActive : {}),
-                  }}
-                >
-                  {item}
-                </a>
+                <a href={NAV_HREFS[i]} style={styles.navLink}>{item}</a>
               </li>
             ))}
           </ul>
@@ -89,10 +81,7 @@ export default function Navbar() {
           <div className="nb-actions" style={styles.actions}>
             {/* Language selector — desktop only */}
             <div className="nb-lang-desktop" style={{ position: "relative" }}>
-              <button
-                style={styles.langBtn}
-                onClick={() => setLangOpen((o) => !o)}
-              >
+              <button style={styles.langBtn} onClick={() => setLangOpen((o) => !o)}>
                 <img
                   src={`https://flagcdn.com/24x18/${currentLang.flagCode}.png`}
                   alt={currentLang.label}
@@ -100,33 +89,28 @@ export default function Navbar() {
                   height={18}
                   style={{ display: "block", borderRadius: 2 }}
                 />
-                <span className="nb-lang-code">{currentLang.code}</span>
+                <span className="nb-lang-code">{currentLang.code.toUpperCase()}</span>
                 <span className="nb-lang-chevron" style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
               </button>
               {langOpen && (
                 <div style={styles.langDropdown}>
-                  {languages.map((lang) => (
+                  {languages.map((l) => (
                     <button
-                      key={lang.code}
+                      key={l.code}
                       style={{
                         ...styles.langOption,
-                        ...(lang.code === currentLang.code
-                          ? { color: "var(--gold-dark)", fontWeight: 600 }
-                          : {}),
+                        ...(l.code === lang ? { color: "var(--gold-dark)", fontWeight: 600 } : {}),
                       }}
-                      onClick={() => {
-                        setCurrentLang(lang);
-                        setLangOpen(false);
-                      }}
+                      onClick={() => { setLang(l.code); setLangOpen(false); }}
                     >
                       <img
-                        src={`https://flagcdn.com/20x15/${lang.flagCode}.png`}
-                        alt={lang.label}
+                        src={`https://flagcdn.com/20x15/${l.flagCode}.png`}
+                        alt={l.label}
                         width={20}
                         height={15}
                         style={{ display: "block", borderRadius: 2 }}
                       />
-                      {lang.label}
+                      {l.label}
                     </button>
                   ))}
                 </div>
@@ -136,10 +120,10 @@ export default function Navbar() {
             {/* Iniciar sesión */}
             <button style={styles.btnOutline}>
               <IconUser />
-              <span className="nb-btn-text">Iniciar sesión</span>
+              <span className="nb-btn-text">{t.nav.login}</span>
             </button>
 
-            {/* Hamburger — mobile only, top right */}
+            {/* Hamburger — mobile only */}
             <button
               className="nb-hamburger"
               style={styles.hamburger}
@@ -164,45 +148,37 @@ export default function Navbar() {
 
         {/* Mobile dropdown menu */}
         <div className={`nb-mobile-menu${menuOpen ? " open" : ""}`}>
-          {MOBILE_NAV_ITEMS.map((item, i) => (
+          {t.nav.items.map((item, i) => (
             <a
               key={item}
-              href="#"
-              style={{
-                ...styles.mobileNavLink,
-                ...(i === 0 ? styles.navLinkActive : {}),
-              }}
+              href={NAV_HREFS[i]}
+              style={styles.mobileNavLink}
               onClick={() => setMenuOpen(false)}
             >
               {item}
             </a>
           ))}
 
-          {/* Language selector — mobile, inside menu */}
+          {/* Language selector — mobile */}
           <div className="nb-lang-mobile" style={styles.mobileLangSection}>
-            <span style={styles.mobileLangTitle}>Idioma</span>
-            {languages.map((lang) => (
+            <span style={styles.mobileLangTitle}>Idioma / Language</span>
+            {languages.map((l) => (
               <button
-                key={lang.code}
+                key={l.code}
                 style={{
                   ...styles.mobileLangOption,
-                  ...(lang.code === currentLang.code
-                    ? { color: "var(--gold-dark)", fontWeight: 600 }
-                    : {}),
+                  ...(l.code === lang ? { color: "var(--gold-dark)", fontWeight: 600 } : {}),
                 }}
-                onClick={() => {
-                  setCurrentLang(lang);
-                  setMenuOpen(false);
-                }}
+                onClick={() => { setLang(l.code); setMenuOpen(false); }}
               >
                 <img
-                  src={`https://flagcdn.com/20x15/${lang.flagCode}.png`}
-                  alt={lang.label}
+                  src={`https://flagcdn.com/20x15/${l.flagCode}.png`}
+                  alt={l.label}
                   width={20}
                   height={15}
                   style={{ display: "block", borderRadius: 2 }}
                 />
-                {lang.label}
+                {l.label}
               </button>
             ))}
           </div>
@@ -243,34 +219,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     flexShrink: 0,
   },
   logoMark: {
-    position: "relative",
     width: 36,
     height: 36,
-    background: "var(--black)",
-    borderRadius: 4,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: 6,
     flexShrink: 0,
-  },
-  logoK: {
-    color: "var(--gold)",
-    fontFamily: "var(--font-playfair), serif",
-    fontWeight: 700,
-    fontSize: 20,
-    lineHeight: 1,
-    position: "relative",
-    zIndex: 1,
-  },
-  logoCorner: {
-    position: "absolute",
-    bottom: 3,
-    right: 3,
-    width: 8,
-    height: 8,
-    borderBottom: "2.5px solid var(--gold)",
-    borderRight: "2.5px solid var(--gold)",
-    borderRadius: "0 0 2px 0",
+    display: "block",
   },
   logoTextWrap: {
     fontFamily: "var(--font-playfair), serif",
@@ -299,10 +252,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "8px 14px",
     borderRadius: 6,
     whiteSpace: "nowrap",
-  },
-  navLinkActive: {
-    color: "var(--gold-dark)",
-    fontWeight: 600,
   },
   mobileNavLink: {
     textDecoration: "none",
@@ -359,7 +308,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: "center",
     gap: 8,
     padding: "10px 14px",
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 500,
     color: "var(--text)",
     cursor: "pointer",

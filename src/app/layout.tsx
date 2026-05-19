@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans, Libre_Franklin } from "next/font/google";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import "./globals.css";
 
 const playfair = Playfair_Display({
@@ -35,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${playfair.variable} ${dmSans.variable} ${libreFranklin.variable}`}>
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

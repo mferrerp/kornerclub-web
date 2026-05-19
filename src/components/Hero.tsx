@@ -1,85 +1,55 @@
 "use client";
 
 import { useState } from "react";
-
-const tabs = ["Comprar", "Alquilar", "Vender"];
-const placeholders: { [key: string]: string } = {
-  Comprar: "Busca por barrio, dirección o código postal…",
-  Alquilar: "Busca pisos en alquiler en Madrid…",
-  Vender: "Introduce la dirección de tu propiedad…",
-};
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Hero() {
-  const [activeTab, setActiveTab] = useState("Comprar");
+  const { t } = useLanguage();
+  const [activeTab, setActiveTab] = useState(0);
 
   return (
     <>
       <style>{`
         @media (max-width: 768px) {
-          .hero-sub { display: none; }
-          .hero-content { text-align: left !important; }
-          .hero-h1 { text-align: left !important; }
+          .hero-content { padding: 0 16px !important; }
         }
       `}</style>
       <section style={styles.hero}>
         <div style={styles.heroBg} />
         <div className="hero-content" style={styles.heroContent}>
-          <h1 className="hero-h1" style={styles.h1}>
-            Tu próximo hogar en{" "}
-            <em style={{ fontStyle: "normal", color: "var(--gold-light)" }}>
-              Madrid
-            </em>{" "}
-            empieza aquí.
+          <h1 style={styles.h1}>
+            {t.hero.h1Before}{" "}
+            <em style={{ fontStyle: "normal", color: "var(--gold-light)" }}>Madrid</em>{" "}
+            {t.hero.h1After}
           </h1>
-          <p className="hero-sub" style={styles.sub}>
-            Compra, vende o alquila con el equipo que conoce cada{" "}
-            <span
-              style={{
-                fontFamily: "var(--font-playfair), serif",
-                fontWeight: 700,
-                color: "var(--gold-light)",
-                letterSpacing: 0.5,
-              }}
-            >
-              KORNER
-            </span>{" "}
-            de la ciudad
-          </p>
 
           <div style={styles.searchBox}>
             <div style={styles.searchTabs}>
-              {tabs.map((tab) => (
+              {t.hero.tabs.map((tab, i) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => setActiveTab(i)}
                   style={{
                     ...styles.searchTab,
-                    ...(tab === activeTab ? styles.searchTabActive : {}),
+                    ...(i === activeTab ? styles.searchTabActive : {}),
                   }}
                 >
                   {tab}
-                  {tab === activeTab && <span style={styles.tabIndicator} />}
+                  {i === activeTab && <span style={styles.tabIndicator} />}
                 </button>
               ))}
             </div>
             <div style={styles.inputRow}>
-              <svg
-                width="18"
-                height="18"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" />
                 <path d="M21 21l-4.35-4.35" />
               </svg>
               <input
                 type="text"
-                placeholder={placeholders[activeTab]}
+                placeholder={t.hero.placeholders[activeTab]}
                 style={styles.input}
               />
-              <button style={styles.searchBtn}>Buscar</button>
+              <button style={styles.searchBtn}>{t.hero.searchBtn}</button>
             </div>
           </div>
         </div>
@@ -95,7 +65,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     overflow: "hidden",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    paddingLeft: "max(24px, calc((100% - var(--max-width)) / 2 + 24px))",
   },
   heroBg: {
     position: "absolute",
@@ -106,7 +77,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   heroContent: {
     position: "relative",
     zIndex: 2,
-    textAlign: "center",
+    textAlign: "left",
     maxWidth: 720,
     padding: "0 24px",
   },
@@ -116,14 +87,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 700,
     color: "white",
     lineHeight: 1.15,
-    marginBottom: 12,
+    marginBottom: 28,
     textShadow: "0 2px 20px rgba(0,0,0,0.2)",
-  },
-  sub: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 18,
-    fontWeight: 300,
-    marginBottom: 32,
   },
   searchBox: {
     background: "white",
@@ -131,7 +96,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     boxShadow: "var(--shadow-lg)",
     overflow: "hidden",
     maxWidth: 640,
-    margin: "0 auto",
+    margin: 0,
   },
   searchTabs: {
     display: "flex",
