@@ -1,16 +1,18 @@
+"use client";
+
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export default function NewcomersCTA() {
+  const { t } = useLanguage();
+
   return (
     <section style={styles.section}>
       <div style={styles.card} className="newcomers-card">
         <div style={styles.text} className="newcomers-text">
-          <div style={styles.badge}>🌍 Vivir en Madrid</div>
-          <h2 style={styles.h2}>¿Acabas de llegar a Madrid?</h2>
-          <p style={styles.desc}>
-            Te ayudamos con la búsqueda de vivienda, los trámites de instalación
-            y la adaptación a tu nuevo barrio. Sabemos lo que necesitas porque lo
-            hemos vivido.
-          </p>
-          <button style={styles.btn}>Agenda una consulta gratuita →</button>
+          <div style={styles.badge}>{t.newcomers.badge}</div>
+          <h2 style={styles.h2}>{t.newcomers.h2}</h2>
+          <p style={styles.desc}>{t.newcomers.desc}</p>
+          <button style={styles.btn}>{t.newcomers.btn}</button>
         </div>
         <div style={styles.image} className="newcomers-image" />
       </div>
@@ -28,12 +30,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     gridTemplateColumns: "1fr 1fr",
     minHeight: 320,
   },
-  text: {
-    padding: 48,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-  },
+  text: { padding: 48, display: "flex", flexDirection: "column", justifyContent: "center" },
   badge: {
     display: "inline-flex",
     alignItems: "center",
@@ -49,20 +46,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
-  h2: {
-    fontFamily: "var(--font-playfair), serif",
-    fontSize: 32,
-    color: "white",
-    marginBottom: 14,
-    lineHeight: 1.2,
-  },
-  desc: {
-    color: "rgba(255,255,255,0.65)",
-    fontSize: 15,
-    lineHeight: 1.6,
-    marginBottom: 28,
-    maxWidth: 400,
-  },
+  h2: { fontFamily: "var(--font-playfair), serif", fontSize: 32, color: "white", marginBottom: 14, lineHeight: 1.2 },
+  desc: { color: "rgba(255,255,255,0.65)", fontSize: 15, lineHeight: 1.6, marginBottom: 28, maxWidth: 400 },
   btn: {
     display: "inline-flex",
     alignItems: "center",
@@ -79,7 +64,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: "fit-content",
   },
   image: {
-    background:
-      "linear-gradient(135deg, rgba(201,162,39,0.2), transparent), url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80') center/cover no-repeat",
+    background: "linear-gradient(135deg, rgba(201,162,39,0.2), transparent), url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80') center/cover no-repeat",
   },
 };
