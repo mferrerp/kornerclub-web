@@ -40,24 +40,17 @@ function CountryCodePicker({ value, onChange }: { value: string; onChange: (v: s
 
   return (
     <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        style={styles.pickerBtn}
-      >
+      <button type="button" onClick={() => setOpen((o) => !o)} style={s.pickerBtn}>
         <span style={{ fontSize: 13 }}>{selected.label}</span>
         <span style={{ fontSize: 13 }}>{selected.code}</span>
         <span style={{ fontSize: 10, opacity: 0.5 }}>▼</span>
       </button>
       {open && (
-        <div style={styles.pickerDropdown}>
+        <div style={s.pickerDropdown}>
           {COUNTRY_CODES.map(({ code, label }) => (
             <div
               key={code}
-              style={{
-                ...styles.pickerOption,
-                background: code === value ? "var(--border)" : "white",
-              }}
+              style={{ ...s.pickerOption, background: code === value ? "var(--border)" : "white" }}
               onMouseDown={() => { onChange(code); setOpen(false); }}
             >
               <span style={{ fontSize: 13, flex: 1 }}>{label}</span>
@@ -72,24 +65,19 @@ function CountryCodePicker({ value, onChange }: { value: string; onChange: (v: s
 
 function PrivacyModal({ title, onClose }: { title: string; onClose: () => void }) {
   useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
+    function handleKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
   return (
-    <div
-      style={{ ...styles.overlay, zIndex: 600 }}
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div style={styles.modal}>
-        <div style={styles.modalHeader}>
-          <h2 style={styles.modalTitle}>{title}</h2>
-          <button style={styles.closeBtn} onClick={onClose} aria-label="Cerrar">✕</button>
+    <div style={{ ...s.overlay, zIndex: 600 }} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={s.modal}>
+        <div style={s.modalHeader}>
+          <h2 style={s.modalTitle}>{title}</h2>
+          <button style={s.closeBtn} onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
-        <div style={styles.modalBody}>
+        <div style={s.modalBody}>
           <p>Política de privacidad — contenido pendiente de redacción.</p>
         </div>
       </div>
@@ -97,9 +85,14 @@ function PrivacyModal({ title, onClose }: { title: string; onClose: () => void }
   );
 }
 
-export default function AgentCTA() {
+interface ContactModalProps {
+  onClose: () => void;
+  /** When set the "purpose" field is shown as read-only with this text. */
+  lockedPurpose?: string;
+}
+
+export default function ContactModal({ onClose, lockedPurpose }: ContactModalProps) {
   const { t } = useLanguage();
-  const [contactOpen, setContactOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [countryCode, setCountryCode] = useState("+34");
@@ -111,33 +104,14 @@ export default function AgentCTA() {
 
   const isValid = name.trim().length > 0 && EMAIL_RE.test(email.trim());
 
-  // External trigger (e.g. from NewcomersCTA)
+  // Escape key (skip if privacy sub-modal is open)
   useEffect(() => {
-    const handler = () => openContact();
-    window.addEventListener("open-contact-modal", handler);
-    return () => window.removeEventListener("open-contact-modal", handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function openContact() {
-    setContactOpen(true);
-    document.body.style.overflow = "hidden";
-  }
-
-  function closeContact() {
-    setContactOpen(false);
-    document.body.style.overflow = "";
-  }
-
-  // Escape key closes modal (but not if privacy sub-modal is open)
-  useEffect(() => {
-    if (!contactOpen) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && !showPrivacy) closeContact();
+      if (e.key === "Escape" && !showPrivacy) onClose();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [contactOpen, showPrivacy]);
+  }, [onClose, showPrivacy]);
 
   async function handleSubmit() {
     if (!isValid) return;
@@ -150,7 +124,7 @@ export default function AgentCTA() {
           name,
           email,
           phone: phone ? `${countryCode} ${phone}` : "",
-          purpose: t.agent.purposes[purposeIdx],
+          purpose: lockedPurpose ?? t.agent.purposes[purposeIdx],
         }),
       });
       if (!res.ok) throw new Error();
@@ -164,61 +138,64 @@ export default function AgentCTA() {
 
   return (
     <>
-      {/* ── Contact modal ─────────────────────────────────────── */}
-      {contactOpen && (
-        <div
-          style={styles.overlay}
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !showPrivacy) closeContact();
-          }}
-        >
-          <div style={styles.modal}>
-            {/* Header */}
-            <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>{t.agent.h2}</h2>
-              <button style={styles.closeBtn} onClick={closeContact} aria-label="Cerrar">✕</button>
-            </div>
+      {showPrivacy && (
+        <PrivacyModal title={t.agent.privacyLink} onClose={() => setShowPrivacy(false)} />
+      )}
 
-            {/* Body */}
-            <div style={styles.modalBody}>
-              <p style={styles.modalDesc}>{t.agent.desc}</p>
+      <div
+        style={s.overlay}
+        onMouseDown={(e) => { if (e.target === e.currentTarget && !showPrivacy) onClose(); }}
+      >
+        <div style={s.modal}>
+          {/* Header */}
+          <div style={s.modalHeader}>
+            <h2 style={s.modalTitle}>{t.agent.h2}</h2>
+            <button style={s.closeBtn} onClick={onClose} aria-label="Cerrar">✕</button>
+          </div>
 
-              {status === "success" ? (
-                <div style={styles.successBox}>
-                  <p style={styles.successTitle}>{t.agent.successTitle}</p>
-                  <p style={styles.successSub}>
-                    {t.agent.successSub}<br />
-                    {t.agent.successRef} <strong>Solicitud {requestNumber}</strong>
-                  </p>
+          {/* Body */}
+          <div style={s.modalBody}>
+            <p style={s.modalDesc}>{t.agent.desc}</p>
+
+            {status === "success" ? (
+              <div style={s.successBox}>
+                <p style={s.successTitle}>{t.agent.successTitle}</p>
+                <p style={s.successSub}>
+                  {t.agent.successSub}<br />
+                  {t.agent.successRef} <strong>Solicitud {requestNumber}</strong>
+                </p>
+              </div>
+            ) : (
+              <div style={s.form}>
+                <input
+                  type="text"
+                  placeholder={t.agent.namePlaceholder}
+                  style={s.input}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+                <input
+                  type="email"
+                  placeholder={t.agent.emailPlaceholder}
+                  style={s.input}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <div style={s.phoneRow}>
+                  <CountryCodePicker value={countryCode} onChange={setCountryCode} />
+                  <input
+                    type="tel"
+                    placeholder={t.agent.phonePlaceholder}
+                    style={{ ...s.input, flex: 1 }}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
                 </div>
-              ) : (
-                <div style={styles.form}>
-                  <input
-                    type="text"
-                    placeholder={t.agent.namePlaceholder}
-                    style={styles.input}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                  <input
-                    type="email"
-                    placeholder={t.agent.emailPlaceholder}
-                    style={styles.input}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <div style={styles.phoneRow}>
-                    <CountryCodePicker value={countryCode} onChange={setCountryCode} />
-                    <input
-                      type="tel"
-                      placeholder={t.agent.phonePlaceholder}
-                      style={{ ...styles.input, flex: 1 }}
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                    />
-                  </div>
+                {lockedPurpose ? (
+                  <div style={s.lockedPurpose}>{lockedPurpose}</div>
+                ) : (
                   <select
-                    style={styles.input}
+                    style={s.input}
                     value={purposeIdx}
                     onChange={(e) => setPurposeIdx(Number(e.target.value))}
                   >
@@ -226,102 +203,39 @@ export default function AgentCTA() {
                       <option key={i} value={i}>{p}</option>
                     ))}
                   </select>
+                )}
 
-                  {status === "error" && (
-                    <p style={styles.errorMsg}>{t.agent.errorMsg}</p>
-                  )}
+                {status === "error" && <p style={s.errorMsg}>{t.agent.errorMsg}</p>}
 
-                  <button
-                    style={{
-                      ...styles.btn,
-                      opacity: isValid && status !== "loading" ? 1 : 0.45,
-                      cursor: isValid && status !== "loading" ? "pointer" : "not-allowed",
-                    }}
-                    disabled={!isValid || status === "loading"}
-                    onClick={handleSubmit}
-                  >
-                    {status === "loading" ? t.agent.sending : t.agent.btn}
+                <button
+                  style={{
+                    ...s.btn,
+                    opacity: isValid && status !== "loading" ? 1 : 0.45,
+                    cursor: isValid && status !== "loading" ? "pointer" : "not-allowed",
+                  }}
+                  disabled={!isValid || status === "loading"}
+                  onClick={handleSubmit}
+                >
+                  {status === "loading" ? t.agent.sending : t.agent.btn}
+                </button>
+
+                <p style={s.privacyNotice}>
+                  {t.agent.privacyNotice}
+                  <button type="button" style={s.privacyLink} onClick={() => setShowPrivacy(true)}>
+                    {t.agent.privacyLink}
                   </button>
-
-                  <p style={styles.privacyNotice}>
-                    {t.agent.privacyNotice}
-                    <button
-                      type="button"
-                      style={styles.privacyLink}
-                      onClick={() => setShowPrivacy(true)}
-                    >
-                      {t.agent.privacyLink}
-                    </button>
-                    {t.agent.privacyNoticeSuffix}
-                  </p>
-                </div>
-              )}
-            </div>
+                  {t.agent.privacyNoticeSuffix}
+                </p>
+              </div>
+            )}
           </div>
         </div>
-      )}
-
-      {/* ── Privacy sub-modal ─────────────────────────────────── */}
-      {showPrivacy && (
-        <PrivacyModal title={t.agent.privacyLink} onClose={() => setShowPrivacy(false)} />
-      )}
-
-      {/* ── On-page teaser section ────────────────────────────── */}
-      <section id="contacto" style={styles.section} className="agent-section">
-        <div style={styles.sectionLeft}>
-          <h2 style={styles.h2}>{t.agent.h2}</h2>
-          <p style={styles.desc}>{t.agent.desc}</p>
-          <button onClick={openContact} style={styles.triggerBtn}>
-            {t.agent.btn}
-          </button>
-        </div>
-        <div style={styles.imageWrap} className="agent-image">
-          <img
-            src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"
-            alt="Agente Korner Club"
-            style={styles.img}
-          />
-        </div>
-      </section>
+      </div>
     </>
   );
 }
 
-const styles: { [key: string]: React.CSSProperties } = {
-  /* ── On-page section ── */
-  section: {
-    maxWidth: "var(--max-width)",
-    margin: "0 auto",
-    padding: "64px 24px",
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 48,
-    alignItems: "center",
-  },
-  sectionLeft: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 20,
-    alignItems: "flex-start",
-  },
-  h2: { fontFamily: "var(--font-playfair), serif", fontSize: 28, margin: 0 },
-  desc: { color: "var(--text-light)", lineHeight: 1.6, margin: 0 },
-  triggerBtn: {
-    background: "var(--gold)",
-    color: "white",
-    border: "none",
-    borderRadius: "var(--radius)",
-    padding: "13px 28px",
-    fontSize: 15,
-    fontWeight: 600,
-    fontFamily: "inherit",
-    cursor: "pointer",
-    transition: "opacity 0.15s",
-  },
-  imageWrap: { borderRadius: 16, overflow: "hidden", height: 340 },
-  img: { width: "100%", height: "100%", objectFit: "cover" },
-
-  /* ── Overlay & modal ── */
+const s: { [key: string]: React.CSSProperties } = {
   overlay: {
     position: "fixed",
     inset: 0,
@@ -376,8 +290,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     gap: 14,
   },
   modalDesc: { color: "var(--text-light)", lineHeight: 1.6, margin: 0, fontSize: 14 },
-
-  /* ── Form fields ── */
   form: { display: "flex", flexDirection: "column", gap: 12 },
   phoneRow: { display: "flex", gap: 8 },
   input: {
@@ -400,6 +312,15 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: "100%",
     transition: "opacity 0.15s",
   },
+  lockedPurpose: {
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius)",
+    padding: "12px 16px",
+    fontSize: 14,
+    background: "var(--off-white, #f9f9f7)",
+    color: "var(--text-light)",
+    fontStyle: "italic",
+  },
   errorMsg: { color: "#c0392b", fontSize: 13, margin: 0 },
   privacyNotice: { fontSize: 12, color: "var(--text-light)", margin: "2px 0 0", lineHeight: 1.5 },
   privacyLink: {
@@ -412,8 +333,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     fontFamily: "inherit",
   },
-
-  /* ── Success ── */
   successBox: {
     background: "#f0faf4",
     border: "1px solid #a8d5b5",
@@ -422,8 +341,6 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   successTitle: { fontWeight: 700, fontSize: 17, margin: "0 0 8px" },
   successSub: { color: "var(--text-light)", lineHeight: 1.6, margin: 0 },
-
-  /* ── Country picker ── */
   pickerBtn: {
     display: "flex",
     alignItems: "center",

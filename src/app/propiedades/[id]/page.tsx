@@ -5,15 +5,16 @@ import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import {
-  Property,
-  PROPERTY_TYPE_LABELS,
-  OPERATION_TYPE_LABELS,
-  STATUS_LABELS,
-} from "@/types/property";
+import { thumbGallery, thumbStrip } from "@/lib/cloudinary";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Property, STATUS_LABELS } from "@/types/property";
 
-const ORIENTATION_LABELS: Record<string, string> = {
-  north: "Norte", south: "Sur", east: "Este", west: "Oeste",
+// Orientation labels per language
+const ORIENTATION_LABELS: Record<string, Record<string, string>> = {
+  es: { north: "Norte", south: "Sur", east: "Este", west: "Oeste" },
+  en: { north: "North", south: "South", east: "East", west: "West" },
+  fr: { north: "Nord",  south: "Sud",  east: "Est",  west: "Ouest" },
+  de: { north: "Nord",  south: "Süd",  east: "Ost",  west: "West" },
 };
 
 const ENERGY_COLORS: Record<string, string> = {
@@ -25,6 +26,8 @@ const ENERGY_COLORS: Record<string, string> = {
 export default function PropiedadPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { lang, t } = useLanguage();
+  const d = t.propertyDetail;
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -62,7 +65,7 @@ export default function PropiedadPage() {
         <Navbar />
         <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
           <img src="/brand/monograma-negro-transparente.svg" alt="" style={{ width: 36, opacity: 0.2 }} />
-          <p style={{ color: "#bbb", fontSize: 14, fontFamily: "inherit" }}>Cargando propiedad…</p>
+          <p style={{ color: "#bbb", fontSize: 14, fontFamily: "inherit" }}>{d.loading}</p>
         </div>
         <Footer />
       </>
@@ -75,25 +78,52 @@ export default function PropiedadPage() {
   const photos = p.photos ?? [];
   const hasPhotos = photos.length > 0;
 
-  const priceLabel = p.operation_type === "sale"
-    ? `${p.price.toLocaleString("es-ES")} €`
-    : `${p.price.toLocaleString("es-ES")} €/mes`;
+  // Description: show the field matching the current language, fall back to ES
+  const descriptionText =
+    (p[`description_${lang}` as keyof Property] as string | null)?.trim() ||
+    p.description_es || "";
 
-  const locationParts = [p.address, p.neighborhood, p.district, p.city].filter(Boolean);
+  // Property type label in current language
+  const ptMap: Record<string, string> = {
+    apartment: d.ptApartment, house: d.ptHouse, studio: d.ptStudio,
+    penthouse: d.ptPenthouse, duplex: d.ptDuplex, commercial: d.ptCommercial,
+    office: d.ptOffice, land: d.ptLand, garage: d.ptGarage, storage: d.ptStorage,
+  };
+  const propertyTypeLabel = ptMap[p.property_type] ?? p.property_type;
+
+  const formatPrice = (n: number) =>
+    n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+  const priceLabel = p.operation_type === "sale"
+    ? `${formatPrice(p.price)} €`
+    : `${formatPrice(p.price)} €/mes`;
+
+  // Address visibility
+  const streetOnly = p.address
+    ? p.address.replace(/,?\s*\d+[a-zA-Z]?\s*$/, "").trim()
+    : null;
+
+  const visibleAddress =
+    p.address_visibility === "exact" ? p.address
+    : p.address_visibility === "street_only" ? streetOnly
+    : null;
+
+  const locationParts = [visibleAddress, p.neighborhood, p.district, p.city].filter(Boolean);
+  const showPostalCode = p.address_visibility === "exact" && p.postal_code;
 
   const features: [string, boolean][] = [
-    ["Exterior", p.is_exterior],
-    ["Ascensor", p.has_elevator],
-    ["Aire acondicionado", p.has_air_conditioning],
-    ["Terraza", p.has_terrace],
-    ["Balcón", p.has_balcony],
-    ["Armarios empotrados", p.has_built_in_wardrobes],
-    ["Garaje incluido", p.has_garage],
-    ["Trastero", p.has_storage],
-    ["Piscina", p.has_pool],
-    ["Jardín", p.has_garden],
-    ["Acceso exterior adaptado", p.accessible_exterior],
-    ["Acceso interior adaptado", p.accessible_interior],
+    [d.fExterior, p.is_exterior],
+    [d.fElevator, p.has_elevator],
+    [d.fAC, p.has_air_conditioning],
+    [d.fTerrace, p.has_terrace],
+    [d.fBalcony, p.has_balcony],
+    [d.fWardrobes, p.has_built_in_wardrobes],
+    [d.fGarage, p.has_garage],
+    [d.fStorage, p.has_storage],
+    [d.fPool, p.has_pool],
+    [d.fGarden, p.has_garden],
+    [d.fAccessibleExt, p.accessible_exterior],
+    [d.fAccessibleInt, p.accessible_interior],
   ];
 
   return (
@@ -134,14 +164,14 @@ export default function PropiedadPage() {
               style={styles.galleryMain}
               onClick={() => setLightboxOpen(true)}
             >
-              <img src={photos[photoIndex]} alt="" style={styles.galleryMainImg} />
+              <img src={thumbGallery(photos[photoIndex])} alt="" style={styles.galleryMainImg} />
               <div style={styles.photoCount}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2" />
                   <circle cx="8.5" cy="8.5" r="1.5" />
                   <polyline points="21,15 16,10 5,21" />
                 </svg>
-                {photos.length} fotos
+                {photos.length} {d.photos}
               </div>
             </div>
             {/* Thumbnails */}
@@ -153,7 +183,7 @@ export default function PropiedadPage() {
                     style={{ ...styles.thumb, ...(i === photoIndex ? styles.thumbActive : {}) }}
                     onClick={() => setPhotoIndex(i)}
                   >
-                    <img src={url} alt="" style={styles.thumbImg} />
+                    <img src={thumbStrip(url)} alt="" style={styles.thumbImg} />
                     {i === 5 && photos.length > 6 && (
                       <div style={styles.thumbMore}>+{photos.length - 6}</div>
                     )}
@@ -171,7 +201,7 @@ export default function PropiedadPage() {
               {/* Breadcrumb */}
               <p style={styles.breadcrumb}>
                 <a href={p.operation_type === "sale" ? "/comprar" : "/alquiler"} style={styles.breadcrumbLink}>
-                  {p.operation_type === "sale" ? "Comprar" : "Alquiler"}
+                  {p.operation_type === "sale" ? d.buy : d.rent}
                 </a>
                 {" › "}
                 {p.city}
@@ -180,9 +210,11 @@ export default function PropiedadPage() {
 
               {/* Title block */}
               <h1 style={styles.title}>
-                {PROPERTY_TYPE_LABELS[p.property_type]}
-                {p.rooms ? ` de ${p.rooms} habitaciones` : ""}
-                {p.neighborhood ? ` en ${p.neighborhood}` : p.city ? ` en ${p.city}` : ""}
+                {d.pageTitle(
+                  propertyTypeLabel,
+                  p.rooms ?? null,
+                  p.neighborhood ?? p.city ?? null
+                )}
               </h1>
 
               <p style={styles.locationLine}>
@@ -191,30 +223,30 @@ export default function PropiedadPage() {
                   <circle cx="12" cy="10" r="3" />
                 </svg>
                 {locationParts.join(", ")}
-                {p.postal_code ? ` · ${p.postal_code}` : ""}
+                {showPostalCode ? ` · ${p.postal_code}` : ""}
               </p>
 
               {/* Key metrics */}
               <div style={styles.metrics}>
-                {p.size_m2 && <MetricBadge icon="📐" label={`${p.size_m2} m²`} sub="Construidos" />}
-                {p.useful_size_m2 && <MetricBadge icon="📐" label={`${p.useful_size_m2} m²`} sub="Útiles" />}
-                {p.rooms != null && <MetricBadge icon="🛏" label={`${p.rooms}`} sub={p.rooms === 1 ? "Hab." : "Habs."} />}
-                {p.bathrooms != null && <MetricBadge icon="🚿" label={`${p.bathrooms}`} sub={p.bathrooms === 1 ? "Baño" : "Baños"} />}
-                {p.floor != null && <MetricBadge icon="🏢" label={`Planta ${p.floor}`} sub={p.is_top_floor ? "Última" : ""} />}
-                {p.construction_year && <MetricBadge icon="🏗" label={`${p.construction_year}`} sub="Año" />}
+                {p.size_m2 && <MetricBadge icon="📐" label={`${p.size_m2} m²`} sub={d.sqmBuilt} />}
+                {p.useful_size_m2 && <MetricBadge icon="📐" label={`${p.useful_size_m2} m²`} sub={d.sqmUseful} />}
+                {p.rooms != null && <MetricBadge icon="🛏" label={`${p.rooms}`} sub={p.rooms === 1 ? d.roomSingular : d.roomPlural} />}
+                {p.bathrooms != null && <MetricBadge icon="🚿" label={`${p.bathrooms}`} sub={p.bathrooms === 1 ? d.bathSingular : d.bathPlural} />}
+                {p.floor != null && <MetricBadge icon="🏢" label={`${d.floorPrefix} ${p.floor}`} sub={p.is_top_floor ? d.lastFloor : ""} />}
+                {p.construction_year && <MetricBadge icon="🏗" label={`${p.construction_year}`} sub={d.yearBuilt} />}
               </div>
 
               {/* Description */}
-              {p.description_es && (
+              {descriptionText && (
                 <div style={styles.section}>
-                  <h2 style={styles.sectionTitle}>Descripción</h2>
-                  <p style={styles.description}>{p.description_es}</p>
+                  <h2 style={styles.sectionTitle}>{d.sDescription}</h2>
+                  <p style={styles.description}>{descriptionText}</p>
                 </div>
               )}
 
               {/* Features */}
               <div style={styles.section}>
-                <h2 style={styles.sectionTitle}>Características</h2>
+                <h2 style={styles.sectionTitle}>{d.sFeatures}</h2>
                 <div style={styles.featureGrid}>
                   {features.filter(([, v]) => v).map(([label]) => (
                     <div key={label} style={styles.featureItem}>
@@ -225,7 +257,7 @@ export default function PropiedadPage() {
                   {p.orientation.length > 0 && (
                     <div style={styles.featureItem}>
                       <span style={styles.featureCheck}>✓</span>
-                      {p.orientation.map((o) => ORIENTATION_LABELS[o]).join(", ")}
+                      {p.orientation.map((o) => (ORIENTATION_LABELS[lang] ?? ORIENTATION_LABELS.es)[o]).join(", ")}
                     </div>
                   )}
                 </div>
@@ -234,27 +266,27 @@ export default function PropiedadPage() {
               {/* Equipment & heating */}
               {(p.kitchen_equipment || p.heating_type) && (
                 <div style={styles.section}>
-                  <h2 style={styles.sectionTitle}>Equipamiento</h2>
+                  <h2 style={styles.sectionTitle}>{d.sEquipment}</h2>
                   <div style={styles.detailList}>
                     {p.kitchen_equipment && (
-                      <DetailRow label="Cocina" value={
-                        p.kitchen_equipment === "fully_equipped_furnished" ? "Equipada y amueblada"
-                        : p.kitchen_equipment === "fully_equipped_unfurnished" ? "Equipada, sin amueblar"
-                        : p.kitchen_equipment === "empty_unfurnished" ? "Vacía, sin amueblar"
-                        : "No especificado"
+                      <DetailRow label={d.lKitchen} value={
+                        p.kitchen_equipment === "fully_equipped_furnished" ? d.kFullFurnished
+                        : p.kitchen_equipment === "fully_equipped_unfurnished" ? d.kFullUnfurnished
+                        : p.kitchen_equipment === "empty_unfurnished" ? d.kEmpty
+                        : d.kEmpty
                       } />
                     )}
                     {p.heating_type && (
-                      <DetailRow label="Calefacción" value={
-                        (p.heating_type === "central" ? "Central" : p.heating_type === "individual" ? "Individual" : "Sin calefacción")
-                        + (p.heating_fuel ? ` (${p.heating_fuel === "gas" ? "gas" : p.heating_fuel === "electric" ? "eléctrico" : p.heating_fuel === "gasoil" ? "gasóleo" : "otro"})` : "")
+                      <DetailRow label={d.lHeating} value={
+                        (p.heating_type === "central" ? d.hCentral : p.heating_type === "individual" ? d.hIndividual : d.hNone)
+                        + (p.heating_fuel ? ` (${p.heating_fuel === "gas" ? d.fuelGas : p.heating_fuel === "electric" ? d.fuelElectric : p.heating_fuel === "gasoil" ? d.fuelGasoil : d.fuelOther})` : "")
                       } />
                     )}
                     {p.condition && (
-                      <DetailRow label="Estado" value={
-                        p.condition === "new" ? "Obra nueva"
-                        : p.condition === "good" ? "Buen estado"
-                        : "A reformar"
+                      <DetailRow label={d.lCondition} value={
+                        p.condition === "new" ? d.condNew
+                        : p.condition === "good" ? d.condGood
+                        : d.condRenovation
                       } />
                     )}
                   </div>
@@ -264,7 +296,7 @@ export default function PropiedadPage() {
               {/* Energy */}
               {(p.energy_certificate || p.emissions_certificate) && (
                 <div style={styles.section}>
-                  <h2 style={styles.sectionTitle}>Eficiencia energética</h2>
+                  <h2 style={styles.sectionTitle}>{d.sEnergy}</h2>
                   <div style={styles.energyRow}>
                     {p.energy_certificate && p.energy_certificate !== "exempt" && p.energy_certificate !== "in_progress" && (
                       <EnergyBadge label="Energía" grade={p.energy_certificate} value={p.energy_consumption ? `${p.energy_consumption} kWh/m²` : undefined} />
@@ -279,7 +311,7 @@ export default function PropiedadPage() {
               {/* Floor plans */}
               {p.floor_plan_photos?.length > 0 && (
                 <div style={styles.section}>
-                  <h2 style={styles.sectionTitle}>Planos</h2>
+                  <h2 style={styles.sectionTitle}>{d.sFloorPlans}</h2>
                   <div style={styles.floorPlanGrid}>
                     {p.floor_plan_photos.map((url, i) => {
                       const isPdf = url.includes("/raw/upload/") || url.toLowerCase().endsWith(".pdf");
@@ -311,16 +343,16 @@ export default function PropiedadPage() {
               {/* Video / virtual tour */}
               {(p.video_url || p.virtual_tour_url) && (
                 <div style={styles.section}>
-                  <h2 style={styles.sectionTitle}>Multimedia</h2>
+                  <h2 style={styles.sectionTitle}>{d.sMultimedia}</h2>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" as const }}>
                     {p.video_url && (
                       <a href={p.video_url} target="_blank" rel="noopener noreferrer" style={styles.mediaLink}>
-                        ▶ Ver vídeo
+                        {d.watchVideo}
                       </a>
                     )}
                     {p.virtual_tour_url && (
                       <a href={p.virtual_tour_url} target="_blank" rel="noopener noreferrer" style={styles.mediaLink}>
-                        🔭 Visita virtual
+                        {d.virtualTour}
                       </a>
                     )}
                   </div>
@@ -333,12 +365,6 @@ export default function PropiedadPage() {
               <div style={styles.contactCard}>
                 {/* Price */}
                 <div style={styles.cardPrice}>{priceLabel}</div>
-                {p.operation_type !== "sale" && p.community_fees && (
-                  <p style={styles.cardPriceSub}>+ {p.community_fees} €/mes comunidad</p>
-                )}
-                {p.operation_type !== "sale" && p.deposit && (
-                  <p style={styles.cardPriceSub}>Fianza: {p.deposit.toLocaleString("es-ES")} €</p>
-                )}
 
                 {/* Status */}
                 <div style={{ ...styles.statusBadge, ...statusColor[p.status] }}>
@@ -349,19 +375,24 @@ export default function PropiedadPage() {
 
                 {/* Ref */}
                 {p.internal_reference && (
-                  <p style={styles.cardRef}>Ref: {p.internal_reference}</p>
+                  <p style={styles.cardRef}>{d.ref} {p.internal_reference}</p>
                 )}
 
                 {/* CTA */}
-                <a href="#contacto" style={styles.ctaBtn}>
-                  Solicitar información
-                </a>
-                <a href="tel:+34600000000" style={styles.ctaBtnSecondary}>
-                  Llamar al agente
-                </a>
+                <button
+                  onClick={() => {
+                    const ref = p.internal_reference ?? p.id.slice(0, 8);
+                    window.dispatchEvent(new CustomEvent("open-contact-modal", {
+                      detail: { lockedPurpose: t.agent.purposeProperty.replace("{ref}", ref) },
+                    }));
+                  }}
+                  style={{ ...styles.ctaBtn, border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "center" as const }}
+                >
+                  {d.requestInfo}
+                </button>
 
                 <p style={styles.cardNote}>
-                  Respuesta garantizada en menos de 24h
+                  {d.responseGuarantee}
                 </p>
               </div>
             </div>

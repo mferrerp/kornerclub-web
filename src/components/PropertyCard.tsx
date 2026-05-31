@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Property, PROPERTY_TYPE_LABELS } from "@/types/property";
+import { thumbCard } from "@/lib/cloudinary";
 
 interface PropertyCardProps {
   property: Property;
@@ -12,9 +13,12 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
     ? (p.photos[p.main_photo_index ?? 0] ?? p.photos[0])
     : null;
 
+  const formatPrice = (n: number) =>
+    n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
   const priceLabel = p.operation_type === "sale"
-    ? `${p.price.toLocaleString("es-ES")} €`
-    : `${p.price.toLocaleString("es-ES")} €/mes`;
+    ? `${formatPrice(p.price)} €`
+    : `${formatPrice(p.price)} €/mes`;
 
   const locationLine = [p.neighborhood, p.district, p.city]
     .filter(Boolean)
@@ -41,7 +45,7 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
       {/* Photo */}
       <div style={cardStyles.photoWrap}>
         {photo ? (
-          <img src={photo} alt={locationLine} style={cardStyles.photo} />
+          <img src={thumbCard(photo)} alt={locationLine} style={cardStyles.photo} />
         ) : (
           <div style={cardStyles.noPhoto}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5">
