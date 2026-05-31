@@ -10,25 +10,35 @@ export function cloudinaryThumb(
   quality = "auto"
 ): string {
   if (!url || !url.includes("res.cloudinary.com")) return url;
-  // Insert transformations after /upload/
   return url.replace(
     "/upload/",
     `/upload/w_${width},h_${height},c_fill,q_${quality},f_auto/`
   );
 }
 
-/** Small grid thumbnail — admin photo picker */
+/**
+ * Korner Club watermark overlay — applied to all public-facing photos.
+ * Uses Cloudinary's layer construction syntax (3 chained segments):
+ *   1. l_  → open the overlay layer with the logo asset
+ *   2. e_make_transparent:40 → remove the white background (tolerance 40)
+ *   3. fl_layer_apply → close/place the layer with size, opacity & position
+ */
+const WM = "l_wordmark-1linea-claro-1880_voqbek/e_make_transparent:40/fl_layer_apply,w_0.9,fl_relative,o_18,g_center";
+
+/** Small grid thumbnail — admin photo picker (NO watermark) */
 export const thumbAdmin = (url: string) => cloudinaryThumb(url, 240, 180);
 
-/** Card thumbnail — public listing pages */
-export const thumbCard = (url: string) => cloudinaryThumb(url, 600, 450);
-
-/** Gallery main photo — detail page hero (high quality, no crop, width-capped) */
-export const thumbGallery = (url: string) => {
+/** Card thumbnail — public listing pages (with watermark) */
+export const thumbCard = (url: string): string => {
   if (!url || !url.includes("res.cloudinary.com")) return url;
-  // c_limit: never upscale, never crop — just cap width; q_90 for crisp detail
-  return url.replace("/upload/", "/upload/w_1600,c_limit,q_90,f_auto/");
+  return url.replace("/upload/", `/upload/w_600,h_450,c_fill,q_auto,f_auto/${WM}/`);
 };
 
-/** Small strip thumbnail — detail page bottom strip */
+/** Gallery main photo — detail page hero (high quality, no crop, with watermark) */
+export const thumbGallery = (url: string): string => {
+  if (!url || !url.includes("res.cloudinary.com")) return url;
+  return url.replace("/upload/", `/upload/w_1600,c_limit,q_90,f_auto/${WM}/`);
+};
+
+/** Small strip thumbnail — detail page bottom strip (NO watermark, too small) */
 export const thumbStrip = (url: string) => cloudinaryThumb(url, 160, 112);

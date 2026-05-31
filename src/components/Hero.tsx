@@ -11,19 +11,22 @@ export default function Hero() {
     <>
       <style>{`
         @media (max-width: 768px) {
-          .hero-content { padding: 0 16px !important; }
+          .hero-section  { justify-content: center !important; padding-left: 0 !important; }
+          .hero-content  { padding: 0 20px !important; max-width: 100% !important; }
+          .hero-h1       { font-size: 34px !important; }
+          .hero-searchbox{ max-width: 100% !important; margin: 0 auto !important; }
         }
       `}</style>
-      <section style={styles.hero}>
+      <section className="hero-section" style={styles.hero}>
         <div style={styles.heroBg} />
         <div className="hero-content" style={styles.heroContent}>
-          <h1 style={styles.h1}>
+          <h1 className="hero-h1" style={styles.h1}>
             {t.hero.h1Before}{" "}
             <em style={{ fontStyle: "normal", color: "var(--gold-light)" }}>Madrid</em>{" "}
             {t.hero.h1After}
           </h1>
 
-          <div style={styles.searchBox}>
+          <div className="hero-searchbox" style={styles.searchBox}>
             <div style={styles.searchTabs}>
               {t.hero.tabs.map((tab, i) => (
                 <button

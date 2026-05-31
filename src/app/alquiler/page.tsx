@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
@@ -28,12 +29,13 @@ const PROPERTY_TYPE_OPTIONS: [PropertyType | "all", string][] = [
 ];
 
 export default function AlquilerPage() {
+  const searchParams = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
-  const [rentType, setRentType] = useState<string>("all");
-  const [propType, setPropType] = useState<string>("all");
+  // Filters — seeded from URL query params
+  const [rentType, setRentType] = useState<string>(searchParams.get("rentType") ?? "all");
+  const [propType, setPropType] = useState<string>(searchParams.get("type") ?? "all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minRooms, setMinRooms] = useState("");

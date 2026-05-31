@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -32,6 +32,8 @@ export default function PropiedadPage() {
   const [loading, setLoading] = useState(true);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const mobileCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase
@@ -58,6 +60,18 @@ export default function PropiedadPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [lightboxOpen, property]);
+
+  // Show sticky bottom bar when inline mobile card scrolls out of view
+  useEffect(() => {
+    const el = mobileCardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [property]); // re-attach after property loads
 
   if (loading) {
     return (
@@ -155,6 +169,20 @@ export default function PropiedadPage() {
         </div>
       )}
 
+      <style>{`
+        @media (max-width: 768px) {
+          .pd-layout       { grid-template-columns: 1fr !important; gap: 0 !important; }
+          .pd-right        { display: none !important; }
+          .pd-mobile-card  { display: flex !important; }
+          .pd-container    { padding: 20px 16px 60px !important; }
+          .pd-sticky-bar   { display: flex !important; }
+        }
+        @media (min-width: 769px) {
+          .pd-mobile-card { display: none !important; }
+          .pd-sticky-bar  { display: none !important; }
+        }
+      `}</style>
+
       <main style={styles.main}>
         {/* Photo gallery */}
         {hasPhotos && (
@@ -194,8 +222,8 @@ export default function PropiedadPage() {
           </div>
         )}
 
-        <div style={styles.container}>
-          <div style={styles.layout}>
+        <div className="pd-container" style={styles.container}>
+          <div className="pd-layout" style={styles.layout}>
             {/* Left: details */}
             <div style={styles.left}>
               {/* Breadcrumb */}
@@ -225,6 +253,32 @@ export default function PropiedadPage() {
                 {locationParts.join(", ")}
                 {showPostalCode ? ` · ${p.postal_code}` : ""}
               </p>
+
+              {/* ── Mobile contact card (static, shown only on mobile) ── */}
+              <div ref={mobileCardRef} className="pd-mobile-card" style={styles.mobileCard}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                  <div>
+                    <div style={styles.cardPrice}>{priceLabel}</div>
+                    {p.internal_reference && (
+                      <p style={{ ...styles.cardRef, marginTop: 4 }}>{d.ref} {p.internal_reference}</p>
+                    )}
+                  </div>
+                  <div style={{ ...styles.statusBadge, ...statusColor[p.status], flexShrink: 0 }}>
+                    {STATUS_LABELS[p.status]}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const ref = p.internal_reference ?? p.id.slice(0, 8);
+                    window.dispatchEvent(new CustomEvent("open-contact-modal", {
+                      detail: { lockedPurpose: t.agent.purposeProperty.replace("{ref}", ref) },
+                    }));
+                  }}
+                  style={{ ...styles.ctaBtn, border: "none", cursor: "pointer", fontFamily: "inherit", textAlign: "center" as const, marginTop: 4 }}
+                >
+                  {d.requestInfo}
+                </button>
+              </div>
 
               {/* Key metrics */}
               <div style={styles.metrics}>
@@ -360,8 +414,8 @@ export default function PropiedadPage() {
               )}
             </div>
 
-            {/* Right: sticky contact card */}
-            <div style={styles.right}>
+            {/* Right: sticky contact card (desktop only) */}
+            <div className="pd-right" style={styles.right}>
               <div style={styles.contactCard}>
                 {/* Price */}
                 <div style={styles.cardPrice}>{priceLabel}</div>
@@ -399,6 +453,31 @@ export default function PropiedadPage() {
           </div>
         </div>
       </main>
+
+      {/* ── Mobile sticky bottom bar ── */}
+      <div
+        className="pd-sticky-bar"
+        style={{
+          ...styles.stickyBar,
+          transform: showStickyBar ? "translateY(0)" : "translateY(100%)",
+        }}
+      >
+        <div style={styles.stickyPrice}>{priceLabel}</div>
+        <div style={{ ...styles.statusBadge, ...statusColor[p.status], flexShrink: 0, fontSize: 11 }}>
+          {STATUS_LABELS[p.status]}
+        </div>
+        <button
+          onClick={() => {
+            const ref = p.internal_reference ?? p.id.slice(0, 8);
+            window.dispatchEvent(new CustomEvent("open-contact-modal", {
+              detail: { lockedPurpose: t.agent.purposeProperty.replace("{ref}", ref) },
+            }));
+          }}
+          style={styles.stickyBtn}
+        >
+          {d.requestInfo}
+        </button>
+      </div>
 
       <Footer />
     </>
@@ -651,6 +730,57 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 500,
     textDecoration: "none",
     fontFamily: "inherit",
+  },
+  // Mobile sticky bottom bar
+  stickyBar: {
+    display: "none", // overridden to "flex" by media query
+    position: "fixed" as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 400,
+    background: "white",
+    borderTop: "1px solid var(--border)",
+    boxShadow: "0 -2px 12px rgba(0,0,0,0.08)",
+    padding: "10px 16px",
+    alignItems: "center",
+    gap: 12,
+    transition: "transform 0.25s ease",
+  },
+  stickyPrice: {
+    flex: 1,
+    fontSize: 17,
+    fontWeight: 700,
+    fontFamily: "var(--font-playfair), serif",
+    color: "var(--black)",
+    whiteSpace: "nowrap" as const,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  stickyBtn: {
+    flexShrink: 0,
+    background: "var(--gold)",
+    color: "white",
+    border: "none",
+    borderRadius: 8,
+    padding: "10px 16px",
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    whiteSpace: "nowrap" as const,
+  },
+  // Mobile contact card (static, full-width, before metrics)
+  mobileCard: {
+    display: "none", // overridden to "flex" by .pd-mobile-card media query
+    flexDirection: "column" as const,
+    gap: 10,
+    background: "white",
+    border: "1px solid var(--border)",
+    borderRadius: 12,
+    padding: "16px",
+    boxShadow: "var(--shadow-md)",
+    margin: "0 0 24px",
   },
   // Contact card
   contactCard: {
