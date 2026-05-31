@@ -17,7 +17,7 @@ const languages: { code: Lang; flagCode: string; label: string }[] = [
 ];
 
 // Indices 3 ("Vivir en Madrid") and 5 ("Contacto") open modals instead of navigating
-const NAV_HREFS = ["/comprar", "/alquiler", "#", null, "#", null];
+const NAV_HREFS = ["/comprar", "/alquiler", "/proximamente", null, "/proximamente", null];
 const MODAL_TRIGGER: Record<number, "vivir" | "contact"> = { 3: "vivir", 5: "contact" };
 
 function IconUser() {

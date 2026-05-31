@@ -44,11 +44,13 @@ function AlquilerPageContent() {
   // Filters — seeded from URL query params
   const [rentType, setRentType] = useState<string>(searchParams.get("rentType") ?? "all");
   const [propType, setPropType] = useState<string>(searchParams.get("type") ?? "all");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [minRooms, setMinRooms] = useState("");
+  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
+  const [minRooms, setMinRooms] = useState(searchParams.get("minRooms") ?? "");
   const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "newest">("newest");
   const [showFilters, setShowFilters] = useState(false);
+  const [aiQuery, setAiQuery] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     async function fetchProperties() {
@@ -86,6 +88,27 @@ function AlquilerPageContent() {
     setMinPrice("");
     setMaxPrice("");
     setMinRooms("");
+    setAiQuery("");
+  }
+
+  async function handleAiSearch() {
+    if (!aiQuery.trim()) return;
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/ai/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: aiQuery, context: "rent" }),
+      });
+      const { filters } = await res.json();
+      if (filters.type) setPropType(filters.type);
+      if (filters.rentType) setRentType(filters.rentType);
+      if (filters.minPrice) setMinPrice(String(filters.minPrice));
+      if (filters.maxPrice) setMaxPrice(String(filters.maxPrice));
+      if (filters.minRooms) setMinRooms(String(filters.minRooms));
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   return (
@@ -100,6 +123,20 @@ function AlquilerPageContent() {
             <p style={styles.heroSub}>
               Pisos, casas, estudios y habitaciones — seleccionados por nuestro equipo.
             </p>
+            <div style={styles.aiBar}>
+              <span style={styles.aiIcon}>✦</span>
+              <input
+                style={styles.aiInput}
+                type="text"
+                placeholder="Ej: estudio amueblado en Lavapiés menos de 900€/mes…"
+                value={aiQuery}
+                onChange={(e) => setAiQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAiSearch()}
+              />
+              <button style={styles.aiBtn} onClick={handleAiSearch} disabled={aiLoading}>
+                {aiLoading ? "Buscando…" : "Buscar"}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -272,6 +309,45 @@ const styles: { [key: string]: React.CSSProperties } = {
     lineHeight: 1.15,
   },
   heroSub: {
+    fontSize: 16,
+    color: "rgba(255,255,255,0.65)",
+    margin: "0 0 20px",
+  },
+  aiBar: {
+    display: "flex",
+    alignItems: "center",
+    background: "white",
+    borderRadius: 10,
+    padding: "6px 6px 6px 14px",
+    gap: 8,
+    maxWidth: 580,
+    boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+  },
+  aiIcon: { fontSize: 16, color: "var(--gold)", flexShrink: 0 },
+  aiInput: {
+    flex: 1,
+    border: "none",
+    outline: "none",
+    fontSize: 14,
+    fontFamily: "inherit",
+    color: "var(--text)",
+    background: "transparent",
+    minWidth: 0,
+  },
+  aiBtn: {
+    flexShrink: 0,
+    background: "var(--gold)",
+    color: "white",
+    border: "none",
+    borderRadius: 7,
+    padding: "9px 20px",
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    whiteSpace: "nowrap",
+  },
+  heroSubUnused: {
     fontSize: 16,
     color: "rgba(255,255,255,0.65)",
     margin: 0,

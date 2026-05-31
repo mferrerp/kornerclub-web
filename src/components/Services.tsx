@@ -3,6 +3,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ICONS = ["🏠", "🔑", "📈", "✦"];
+const CARD_HREFS = ["/comprar", "/alquiler", "/proximamente", "/proximamente"];
 const ICON_BG = ["#e8f5e9", "#e3f2fd", "#fff3e0", "linear-gradient(135deg, #f9f3e3, #f0e6c8)"];
 
 export default function Services() {
@@ -22,7 +23,7 @@ export default function Services() {
         </div>
         <div style={styles.grid} className="services-grid">
           {t.services.cards.map((s, i) => (
-            <a key={s.title} href="#" style={styles.card}>
+            <a key={s.title} href={CARD_HREFS[i]} style={styles.card}>
               <div style={{ ...styles.icon, background: ICON_BG[i] }}>{ICONS[i]}</div>
               <h3 style={styles.cardTitle}>{s.title}</h3>
               <p style={styles.cardDesc}>{s.desc}</p>
