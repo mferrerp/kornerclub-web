@@ -156,10 +156,11 @@ export default function PropiedadPage() {
             onClick={(e) => { e.stopPropagation(); setPhotoIndex((i) => (i - 1 + photos.length) % photos.length); }}
           >‹</button>
           <img
-            src={photos[photoIndex]}
+            src={thumbGallery(photos[photoIndex])}
             alt=""
             style={styles.lightboxImg}
             onClick={(e) => e.stopPropagation()}
+            onContextMenu={(e) => e.preventDefault()}
           />
           <button
             style={{ ...styles.lightboxNav, right: 16 }}
