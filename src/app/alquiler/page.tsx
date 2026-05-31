@@ -44,9 +44,9 @@ function AlquilerPageContent() {
   // Filters — seeded from URL query params
   const [rentType, setRentType] = useState<string>(searchParams.get("rentType") ?? "all");
   const [propType, setPropType] = useState<string>(searchParams.get("type") ?? "all");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [minRooms, setMinRooms] = useState("");
+  const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") ?? "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
+  const [minRooms, setMinRooms] = useState(searchParams.get("minRooms") ?? "");
   const [sortBy, setSortBy] = useState<"price_asc" | "price_desc" | "newest">("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [aiQuery, setAiQuery] = useState("");

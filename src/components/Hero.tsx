@@ -1,11 +1,55 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// Tab 0 = Comprar (sale), Tab 1 = Alquilar (rent), Tab 2 = Vender (no search)
+const TAB_CONTEXT = ["sale", "rent", null] as const;
+const TAB_BASE    = ["/comprar", "/alquiler", "/proximamente"] as const;
 
 export default function Hero() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(0);
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+
+  async function handleSearch() {
+    const context = TAB_CONTEXT[activeTab];
+    const base    = TAB_BASE[activeTab];
+
+    // "Vender" tab — no AI search, just navigate
+    if (!context) { router.push(base); return; }
+
+    // Empty query — navigate to the listing page without filters
+    if (!query.trim()) { router.push(base); return; }
+
+    setSearching(true);
+    try {
+      const res = await fetch("/api/ai/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, context }),
+      });
+      const { filters = {} } = await res.json();
+
+      const params = new URLSearchParams();
+      if (filters.type)     params.set("type",     filters.type);
+      if (filters.condition) params.set("condition", filters.condition);
+      if (filters.rentType) params.set("rentType",  filters.rentType);
+      if (filters.minPrice) params.set("minPrice",  String(filters.minPrice));
+      if (filters.maxPrice) params.set("maxPrice",  String(filters.maxPrice));
+      if (filters.minRooms) params.set("minRooms",  String(filters.minRooms));
+
+      const qs = params.toString();
+      router.push(qs ? `${base}?${qs}` : base);
+    } catch {
+      router.push(base);
+    } finally {
+      setSearching(false);
+    }
+  }
 
   return (
     <>
@@ -31,7 +75,7 @@ export default function Hero() {
               {t.hero.tabs.map((tab, i) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(i)}
+                  onClick={() => { setActiveTab(i); setQuery(""); }}
                   style={{
                     ...styles.searchTab,
                     ...(i === activeTab ? styles.searchTabActive : {}),
@@ -51,8 +95,17 @@ export default function Hero() {
                 type="text"
                 placeholder={t.hero.placeholders[activeTab]}
                 style={styles.input}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               />
-              <button style={styles.searchBtn}>{t.hero.searchBtn}</button>
+              <button
+                style={{ ...styles.searchBtn, opacity: searching ? 0.7 : 1 }}
+                onClick={handleSearch}
+                disabled={searching}
+              >
+                {searching ? "…" : t.hero.searchBtn}
+              </button>
             </div>
           </div>
         </div>
@@ -157,5 +210,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     fontFamily: "inherit",
     whiteSpace: "nowrap",
+    transition: "opacity 0.15s",
   },
 };
