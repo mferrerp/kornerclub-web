@@ -5,13 +5,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 // href arrays per column — language-independent, matches the order of links in i18n.ts
 const COLUMN_HREFS: string[][] = [
   // Comprar
-  ["/comprar?type=apartment", "/comprar?type=house", "/comprar?type=penthouse", "/comprar?condition=new", "#"],
+  ["/comprar?type=apartment", "/comprar?type=house", "/comprar?type=penthouse", "/comprar?condition=new", "/proximamente"],
   // Alquilar
-  ["/alquiler?type=apartment", "/alquiler?type=studio", "/alquiler?rentType=rent_temporary", "#"],
+  ["/alquiler?type=apartment", "/alquiler?type=studio", "/alquiler?rentType=rent_temporary", "/proximamente"],
   // Propietario
-  ["#", "#", "#"],
+  ["/proximamente", "/proximamente", "/proximamente"],
   // Empresa
-  ["#", "#", "#"],
+  ["/proximamente", "/proximamente", "/proximamente"],
 ];
 
 export default function Footer() {

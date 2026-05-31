@@ -28,6 +28,41 @@ const LANG_NAMES: Record<string, string> = {
   de: "German",
 };
 
+// ─── Prompt: Natural-language property search ─────────────────────────────────
+//
+// Called when the user types a free-text query on /comprar or /alquiler.
+// Claude interprets the intent and returns structured filter fields.
+// context "sale"  → prices in € total; context "rent" → prices in €/month.
+
+export function buildSearchPrompt(query: string, context: "sale" | "rent"): string {
+  const ctxLabel = context === "sale" ? "purchase (sale)" : "rental";
+  return `\
+You are a smart real estate search assistant for Korner Club, a digital real estate \
+agency in Madrid, Spain. Interpret the user's natural-language query and extract \
+structured search filters from it.
+
+Operation context: ${ctxLabel}
+
+Extract only the fields you can confidently infer. Leave out anything uncertain.
+
+Available fields:
+- "type": "apartment" | "house" | "studio" | "penthouse" | "duplex" | "commercial" | "office" | "land" | "garage" | "storage"
+- "minPrice": integer (euros${context === "rent" ? "/month" : " total"})
+- "maxPrice": integer (euros${context === "rent" ? "/month" : " total"})
+- "minRooms": integer (number of bedrooms)
+- "condition": "new" | "good" | "renovation"
+${context === "rent" ? '- "rentType": "rent_permanent" | "rent_temporary" | "rent_room" | "rent_seasonal"\n' : ""}\
+Spanish vocabulary hints: piso/apartamento→apartment, casa/chalet→house, estudio/loft→studio, \
+ático→penthouse, dúplex→duplex, obra nueva/nuevo→condition:new, a reformar→condition:renovation, \
+temporal/corta estancia→rentType:rent_temporary, vacacional→rentType:rent_seasonal, \
+habitación (rental)→rentType:rent_room, barato/económico→low maxPrice, lujo/exclusivo→high minPrice.
+
+User query: "${query}"
+
+Respond ONLY with a valid JSON object. If nothing can be extracted, return {}.
+No markdown, no commentary.`;
+}
+
 // ─── Prompt: Property description translation ─────────────────────────────────
 //
 // Called when the agent clicks "Traducir con IA" in the Description tab.
