@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Lang } from "@/lib/i18n";
 import AuthModal from "@/components/AuthModal";
+import ContactModal from "@/components/ContactModal";
+import VivirModal from "@/components/VivirModal";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -14,7 +16,9 @@ const languages: { code: Lang; flagCode: string; label: string }[] = [
   { code: "de", flagCode: "de", label: "Deutsch" },
 ];
 
-const NAV_HREFS = ["/comprar", "/alquiler", "#", "#", "#", "#contacto"];
+// Indices 3 ("Vivir en Madrid") and 5 ("Contacto") open modals instead of navigating
+const NAV_HREFS = ["/comprar", "/alquiler", "#", null, "#", null];
+const MODAL_TRIGGER: Record<number, "vivir" | "contact"> = { 3: "vivir", 5: "contact" };
 
 function IconUser() {
   return (
@@ -30,6 +34,10 @@ export default function Navbar() {
   const [langOpen, setLangOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [vivirOpen, setVivirOpen] = useState(false);
+  // Use a ref so the value is set synchronously before the re-render triggered by setContactOpen
+  const lockedPurposeRef = useRef<string | undefined>(undefined);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -69,6 +77,24 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  // Body scroll lock when any modal is open
+  useEffect(() => {
+    document.body.style.overflow = contactOpen || vivirOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [contactOpen, vivirOpen]);
+
+  // External trigger (e.g. from detail page "Solicitar información" button)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ lockedPurpose?: string }>).detail;
+      // Set synchronously via ref BEFORE the state update that triggers the render
+      lockedPurposeRef.current = detail?.lockedPurpose;
+      setContactOpen(true);
+    };
+    window.addEventListener("open-contact-modal", handler);
+    return () => window.removeEventListener("open-contact-modal", handler);
+  }, []);
+
   const firstName = user?.user_metadata?.full_name?.split(" ")[0]
     ?? user?.user_metadata?.name?.split(" ")[0]
     ?? user?.email?.split("@")[0]
@@ -84,6 +110,18 @@ export default function Navbar() {
   return (
     <>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {contactOpen && (
+        <ContactModal
+          onClose={() => { setContactOpen(false); lockedPurposeRef.current = undefined; }}
+          lockedPurpose={lockedPurposeRef.current}
+        />
+      )}
+      {vivirOpen && (
+        <VivirModal
+          onClose={() => setVivirOpen(false)}
+          onOpenContact={() => { setVivirOpen(false); setContactOpen(true); }}
+        />
+      )}
       <style>{`
         .nb-nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
         .nb-hamburger { display: none; }
@@ -125,7 +163,16 @@ export default function Navbar() {
           <ul className="nb-nav-links" style={styles.navLinks}>
             {t.nav.items.map((item, i) => (
               <li key={item}>
-                <a href={NAV_HREFS[i]} style={styles.navLink}>{item}</a>
+                {MODAL_TRIGGER[i] ? (
+                  <button
+                    style={styles.navLinkBtn}
+                    onClick={() => MODAL_TRIGGER[i] === "vivir" ? setVivirOpen(true) : setContactOpen(true)}
+                  >
+                    {item}
+                  </button>
+                ) : (
+                  <a href={NAV_HREFS[i] ?? "#"} style={styles.navLink}>{item}</a>
+                )}
               </li>
             ))}
           </ul>
@@ -227,14 +274,24 @@ export default function Navbar() {
         {/* Mobile dropdown menu */}
         <div className={`nb-mobile-menu${menuOpen ? " open" : ""}`}>
           {t.nav.items.map((item, i) => (
-            <a
-              key={item}
-              href={NAV_HREFS[i]}
-              style={styles.mobileNavLink}
-              onClick={() => setMenuOpen(false)}
-            >
-              {item}
-            </a>
+            MODAL_TRIGGER[i] ? (
+              <button
+                key={item}
+                style={{ ...styles.mobileNavLink, background: "none", border: "none", width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit" }}
+                onClick={() => { setMenuOpen(false); MODAL_TRIGGER[i] === "vivir" ? setVivirOpen(true) : setContactOpen(true); }}
+              >
+                {item}
+              </button>
+            ) : (
+              <a
+                key={item}
+                href={NAV_HREFS[i] ?? "#"}
+                style={styles.mobileNavLink}
+                onClick={() => setMenuOpen(false)}
+              >
+                {item}
+              </a>
+            )
           ))}
 
           {/* Language selector — mobile */}
@@ -330,6 +387,18 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "8px 14px",
     borderRadius: 6,
     whiteSpace: "nowrap",
+  },
+  navLinkBtn: {
+    background: "none",
+    border: "none",
+    color: "var(--text)",
+    fontSize: 14,
+    fontWeight: 500,
+    padding: "8px 14px",
+    borderRadius: 6,
+    whiteSpace: "nowrap",
+    cursor: "pointer",
+    fontFamily: "inherit",
   },
   mobileNavLink: {
     textDecoration: "none",

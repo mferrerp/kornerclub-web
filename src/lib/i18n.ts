@@ -11,6 +11,82 @@ export interface FooterColumn {
   links: string[];
 }
 
+export interface PropertyDetailT {
+  loading: string;
+  // Breadcrumb
+  buy: string;
+  rent: string;
+  // Page title builder
+  pageTitle: (typeLabel: string, rooms: number | null, location: string | null) => string;
+  // Metric labels
+  sqmBuilt: string;
+  sqmUseful: string;
+  roomSingular: string;
+  roomPlural: string;
+  bathSingular: string;
+  bathPlural: string;
+  floorPrefix: string;
+  lastFloor: string;
+  yearBuilt: string;
+  photos: string;
+  // Section titles
+  sDescription: string;
+  sFeatures: string;
+  sEquipment: string;
+  sEnergy: string;
+  sFloorPlans: string;
+  sMultimedia: string;
+  // Media links
+  watchVideo: string;
+  virtualTour: string;
+  // Contact card
+  requestInfo: string;
+  callAgent: string;
+  responseGuarantee: string;
+  ref: string;
+  // Feature labels
+  fExterior: string;
+  fElevator: string;
+  fAC: string;
+  fTerrace: string;
+  fBalcony: string;
+  fWardrobes: string;
+  fGarage: string;
+  fStorage: string;
+  fPool: string;
+  fGarden: string;
+  fAccessibleExt: string;
+  fAccessibleInt: string;
+  // Equipment detail labels
+  lKitchen: string;
+  lHeating: string;
+  lCondition: string;
+  kFullFurnished: string;
+  kFullUnfurnished: string;
+  kEmpty: string;
+  hCentral: string;
+  hIndividual: string;
+  hNone: string;
+  fuelGas: string;
+  fuelElectric: string;
+  fuelGasoil: string;
+  fuelOther: string;
+  condNew: string;
+  condGood: string;
+  condRenovation: string;
+  // Property type labels
+  ptApartment: string;
+  ptHouse: string;
+  ptStudio: string;
+  ptPenthouse: string;
+  ptDuplex: string;
+  ptCommercial: string;
+  ptOffice: string;
+  ptLand: string;
+  ptGarage: string;
+  ptStorage: string;
+}
+
 export interface T {
   nav: {
     items: string[];
@@ -47,6 +123,7 @@ export interface T {
     emailPlaceholder: string;
     phonePlaceholder: string;
     purposes: string[];
+    purposeProperty: string; // template — replace {ref} with the property reference
     btn: string;
     sending: string;
     successTitle: string;
@@ -63,6 +140,7 @@ export interface T {
     copyright: string;
     legal: string[];
   };
+  propertyDetail: PropertyDetailT;
 }
 
 export const translations: Record<Lang, T> = {
@@ -111,6 +189,7 @@ export const translations: Record<Lang, T> = {
       emailPlaceholder: "Email",
       phonePlaceholder: "Teléfono (opcional)",
       purposes: ["Quiero comprar", "Quiero alquilar", "Quiero vender", "Acabo de llegar a Madrid"],
+      purposeProperty: "Quiero información acerca de la propiedad {ref}",
       btn: "Contactar agente",
       sending: "Enviando…",
       successTitle: "¡Mensaje enviado!",
@@ -120,6 +199,32 @@ export const translations: Record<Lang, T> = {
       privacyNotice: "Al enviar este formulario aceptas nuestra ",
       privacyLink: "Política de Privacidad",
       privacyNoticeSuffix: ".",
+    },
+    propertyDetail: {
+      loading: "Cargando propiedad…",
+      buy: "Comprar", rent: "Alquiler",
+      pageTitle: (type, rooms, loc) => `${type}${rooms ? ` de ${rooms} habitacion${rooms === 1 ? "" : "es"}` : ""}${loc ? ` en ${loc}` : ""}`,
+      sqmBuilt: "Construidos", sqmUseful: "Útiles",
+      roomSingular: "Hab.", roomPlural: "Habs.",
+      bathSingular: "Baño", bathPlural: "Baños",
+      floorPrefix: "Planta", lastFloor: "Última", yearBuilt: "Año", photos: "fotos",
+      sDescription: "Descripción", sFeatures: "Características", sEquipment: "Equipamiento",
+      sEnergy: "Eficiencia energética", sFloorPlans: "Planos", sMultimedia: "Multimedia",
+      watchVideo: "▶ Ver vídeo", virtualTour: "🔭 Visita virtual",
+      requestInfo: "Solicitar información", callAgent: "Llamar al agente",
+      responseGuarantee: "Respuesta garantizada en menos de 24h", ref: "Ref:",
+      fExterior: "Exterior", fElevator: "Ascensor", fAC: "Aire acondicionado",
+      fTerrace: "Terraza", fBalcony: "Balcón", fWardrobes: "Armarios empotrados",
+      fGarage: "Garaje incluido", fStorage: "Trastero", fPool: "Piscina", fGarden: "Jardín",
+      fAccessibleExt: "Acceso exterior adaptado", fAccessibleInt: "Acceso interior adaptado",
+      lKitchen: "Cocina", lHeating: "Calefacción", lCondition: "Estado",
+      kFullFurnished: "Equipada y amueblada", kFullUnfurnished: "Equipada, sin amueblar", kEmpty: "Vacía, sin amueblar",
+      hCentral: "Central", hIndividual: "Individual", hNone: "Sin calefacción",
+      fuelGas: "gas", fuelElectric: "eléctrico", fuelGasoil: "gasóleo", fuelOther: "otro",
+      condNew: "Obra nueva", condGood: "Buen estado", condRenovation: "A reformar",
+      ptApartment: "Piso", ptHouse: "Casa", ptStudio: "Estudio", ptPenthouse: "Ático",
+      ptDuplex: "Dúplex", ptCommercial: "Local comercial", ptOffice: "Oficina",
+      ptLand: "Terreno", ptGarage: "Garaje", ptStorage: "Trastero",
     },
     footer: {
       brandDesc: "Inmobiliaria digital en Madrid. Especialistas en acompañar a recién llegados en su proceso de instalación y búsqueda de vivienda. Tu barrio, tu Korner.",
@@ -179,6 +284,7 @@ export const translations: Record<Lang, T> = {
       emailPlaceholder: "Email",
       phonePlaceholder: "Phone (optional)",
       purposes: ["I want to buy", "I want to rent", "I want to sell", "I just arrived in Madrid"],
+      purposeProperty: "I would like information about property {ref}",
       btn: "Contact agent",
       sending: "Sending…",
       successTitle: "Message sent!",
@@ -188,6 +294,32 @@ export const translations: Record<Lang, T> = {
       privacyNotice: "By submitting this form you accept our ",
       privacyLink: "Privacy Policy",
       privacyNoticeSuffix: ".",
+    },
+    propertyDetail: {
+      loading: "Loading property…",
+      buy: "Buy", rent: "Rent",
+      pageTitle: (type, rooms, loc) => `${rooms ? `${rooms}-bedroom ` : ""}${type}${loc ? ` in ${loc}` : ""}`,
+      sqmBuilt: "Built area", sqmUseful: "Floor area",
+      roomSingular: "Bed.", roomPlural: "Beds.",
+      bathSingular: "Bath", bathPlural: "Baths",
+      floorPrefix: "Floor", lastFloor: "Top", yearBuilt: "Year", photos: "photos",
+      sDescription: "Description", sFeatures: "Features", sEquipment: "Equipment",
+      sEnergy: "Energy efficiency", sFloorPlans: "Floor plans", sMultimedia: "Multimedia",
+      watchVideo: "▶ Watch video", virtualTour: "🔭 Virtual tour",
+      requestInfo: "Request information", callAgent: "Call the agent",
+      responseGuarantee: "Guaranteed response within 24h", ref: "Ref:",
+      fExterior: "Exterior", fElevator: "Lift", fAC: "Air conditioning",
+      fTerrace: "Terrace", fBalcony: "Balcony", fWardrobes: "Built-in wardrobes",
+      fGarage: "Garage included", fStorage: "Storage unit", fPool: "Swimming pool", fGarden: "Garden",
+      fAccessibleExt: "Adapted exterior access", fAccessibleInt: "Adapted interior access",
+      lKitchen: "Kitchen", lHeating: "Heating", lCondition: "Condition",
+      kFullFurnished: "Fully equipped & furnished", kFullUnfurnished: "Fully equipped, unfurnished", kEmpty: "Empty, unfurnished",
+      hCentral: "Central", hIndividual: "Individual", hNone: "No heating",
+      fuelGas: "gas", fuelElectric: "electric", fuelGasoil: "oil", fuelOther: "other",
+      condNew: "New build", condGood: "Good condition", condRenovation: "Needs renovation",
+      ptApartment: "Flat", ptHouse: "House", ptStudio: "Studio", ptPenthouse: "Penthouse",
+      ptDuplex: "Duplex", ptCommercial: "Commercial space", ptOffice: "Office",
+      ptLand: "Land", ptGarage: "Garage", ptStorage: "Storage unit",
     },
     footer: {
       brandDesc: "Digital real estate agency in Madrid. Specialists in supporting newcomers with their relocation and home search. Your neighbourhood, your Korner.",
@@ -247,6 +379,7 @@ export const translations: Record<Lang, T> = {
       emailPlaceholder: "Email",
       phonePlaceholder: "Téléphone (facultatif)",
       purposes: ["Je veux acheter", "Je veux louer", "Je veux vendre", "Je viens d'arriver à Madrid"],
+      purposeProperty: "Je souhaite des informations sur le bien {ref}",
       btn: "Contacter un agent",
       sending: "Envoi en cours…",
       successTitle: "Message envoyé !",
@@ -256,6 +389,32 @@ export const translations: Record<Lang, T> = {
       privacyNotice: "En soumettant ce formulaire, vous acceptez notre ",
       privacyLink: "Politique de confidentialité",
       privacyNoticeSuffix: ".",
+    },
+    propertyDetail: {
+      loading: "Chargement…",
+      buy: "Acheter", rent: "Louer",
+      pageTitle: (type, rooms, loc) => `${type}${rooms ? ` de ${rooms} chambre${rooms === 1 ? "" : "s"}` : ""}${loc ? ` à ${loc}` : ""}`,
+      sqmBuilt: "Surface habitable", sqmUseful: "Surface utile",
+      roomSingular: "Ch.", roomPlural: "Chs.",
+      bathSingular: "SDB", bathPlural: "SDBs",
+      floorPrefix: "Étage", lastFloor: "Dernier", yearBuilt: "Année", photos: "photos",
+      sDescription: "Description", sFeatures: "Caractéristiques", sEquipment: "Équipement",
+      sEnergy: "Performance énergétique", sFloorPlans: "Plans", sMultimedia: "Multimédia",
+      watchVideo: "▶ Voir la vidéo", virtualTour: "🔭 Visite virtuelle",
+      requestInfo: "Demander des informations", callAgent: "Appeler l'agent",
+      responseGuarantee: "Réponse garantie sous 24h", ref: "Réf. :",
+      fExterior: "Extérieur", fElevator: "Ascenseur", fAC: "Climatisation",
+      fTerrace: "Terrasse", fBalcony: "Balcon", fWardrobes: "Placards intégrés",
+      fGarage: "Garage inclus", fStorage: "Cave", fPool: "Piscine", fGarden: "Jardin",
+      fAccessibleExt: "Accès extérieur adapté", fAccessibleInt: "Accès intérieur adapté",
+      lKitchen: "Cuisine", lHeating: "Chauffage", lCondition: "État",
+      kFullFurnished: "Entièrement équipée et meublée", kFullUnfurnished: "Entièrement équipée, non meublée", kEmpty: "Vide, non meublée",
+      hCentral: "Collectif", hIndividual: "Individuel", hNone: "Sans chauffage",
+      fuelGas: "gaz", fuelElectric: "électrique", fuelGasoil: "fioul", fuelOther: "autre",
+      condNew: "Construction neuve", condGood: "Bon état", condRenovation: "À rénover",
+      ptApartment: "Appartement", ptHouse: "Maison", ptStudio: "Studio", ptPenthouse: "Penthouse",
+      ptDuplex: "Duplex", ptCommercial: "Local commercial", ptOffice: "Bureau",
+      ptLand: "Terrain", ptGarage: "Garage", ptStorage: "Cave/Garde-meuble",
     },
     footer: {
       brandDesc: "Agence immobilière digitale à Madrid. Spécialistes pour accompagner les nouveaux arrivants dans leur installation et leur recherche de logement. Votre quartier, votre Korner.",
@@ -315,6 +474,7 @@ export const translations: Record<Lang, T> = {
       emailPlaceholder: "E-Mail",
       phonePlaceholder: "Telefon (optional)",
       purposes: ["Ich möchte kaufen", "Ich möchte mieten", "Ich möchte verkaufen", "Ich bin gerade in Madrid angekommen"],
+      purposeProperty: "Ich möchte Informationen zur Immobilie {ref}",
       btn: "Agenten kontaktieren",
       sending: "Wird gesendet…",
       successTitle: "Nachricht gesendet!",
@@ -324,6 +484,32 @@ export const translations: Record<Lang, T> = {
       privacyNotice: "Mit dem Absenden dieses Formulars stimmen Sie unserer ",
       privacyLink: "Datenschutzrichtlinie",
       privacyNoticeSuffix: " zu.",
+    },
+    propertyDetail: {
+      loading: "Immobilie wird geladen…",
+      buy: "Kaufen", rent: "Mieten",
+      pageTitle: (type, rooms, loc) => `${type}${rooms ? ` mit ${rooms} Schlafzimmer${rooms === 1 ? "" : "n"}` : ""}${loc ? ` in ${loc}` : ""}`,
+      sqmBuilt: "Wohnfläche", sqmUseful: "Nutzfläche",
+      roomSingular: "Zi.", roomPlural: "Zi.",
+      bathSingular: "Bad", bathPlural: "Bäder",
+      floorPrefix: "Etage", lastFloor: "Oberste", yearBuilt: "Baujahr", photos: "Fotos",
+      sDescription: "Beschreibung", sFeatures: "Ausstattung", sEquipment: "Einrichtung",
+      sEnergy: "Energieeffizienz", sFloorPlans: "Grundrisse", sMultimedia: "Multimedia",
+      watchVideo: "▶ Video ansehen", virtualTour: "🔭 Virtuelle Tour",
+      requestInfo: "Informationen anfragen", callAgent: "Makler anrufen",
+      responseGuarantee: "Antwort innerhalb von 24 Stunden garantiert", ref: "Ref.:",
+      fExterior: "Außenlage", fElevator: "Aufzug", fAC: "Klimaanlage",
+      fTerrace: "Terrasse", fBalcony: "Balkon", fWardrobes: "Einbauschränke",
+      fGarage: "Garage inklusive", fStorage: "Lagerraum", fPool: "Schwimmbad", fGarden: "Garten",
+      fAccessibleExt: "Barrierefreier Außenzugang", fAccessibleInt: "Barrierefreier Innenzugang",
+      lKitchen: "Küche", lHeating: "Heizung", lCondition: "Zustand",
+      kFullFurnished: "Voll ausgestattet und möbliert", kFullUnfurnished: "Voll ausgestattet, unmöbliert", kEmpty: "Leer, unmöbliert",
+      hCentral: "Zentralheizung", hIndividual: "Einzelheizung", hNone: "Keine Heizung",
+      fuelGas: "Gas", fuelElectric: "Strom", fuelGasoil: "Öl", fuelOther: "Sonstige",
+      condNew: "Neubau", condGood: "Guter Zustand", condRenovation: "Renovierungsbedarf",
+      ptApartment: "Wohnung", ptHouse: "Haus", ptStudio: "Studio", ptPenthouse: "Penthouse",
+      ptDuplex: "Duplex", ptCommercial: "Gewerberaum", ptOffice: "Büro",
+      ptLand: "Grundstück", ptGarage: "Garage", ptStorage: "Lagerraum",
     },
     footer: {
       brandDesc: "Digitale Immobilienagentur in Madrid. Spezialisten für die Begleitung von Neuankömmlingen bei ihrer Einrichtung und Wohnungssuche. Ihr Viertel, Ihr Korner.",

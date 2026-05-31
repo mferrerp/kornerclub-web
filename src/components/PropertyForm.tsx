@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { thumbAdmin } from "@/lib/cloudinary";
 import {
   Property,
   OperationType,
@@ -280,6 +281,11 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("tipo");
+  const [translateSource, setTranslateSource] = useState<"es" | "en" | "fr" | "de">("es");
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const floorPlanInputRef = useRef<HTMLInputElement>(null);
 
@@ -313,7 +319,101 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
       setFloorPlanPhotos((p) => p.filter((_, i) => i !== index));
     } else {
       setPhotos((p) => p.filter((_, i) => i !== index));
-      if (mainPhotoIndex >= index && mainPhotoIndex > 0) setMainPhotoIndex((i) => i - 1);
+      if (index === mainPhotoIndex) setMainPhotoIndex(0);
+      else if (index < mainPhotoIndex) setMainPhotoIndex((i) => i - 1);
+    }
+  }
+
+  function setAsMain(index: number) {
+    // Move selected photo to position 0 and mark as main
+    setPhotos((prev) => {
+      const arr = [...prev];
+      const [photo] = arr.splice(index, 1);
+      return [photo, ...arr];
+    });
+    setMainPhotoIndex(0);
+  }
+
+  function onPhotoDragStart(index: number) {
+    setDragIndex(index);
+  }
+
+  function onPhotoDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault();
+    setDragOver(index);
+  }
+
+  function onPhotoDrop(targetIndex: number) {
+    if (dragIndex === null || dragIndex === targetIndex) {
+      setDragIndex(null);
+      setDragOver(null);
+      return;
+    }
+    setPhotos((prev) => {
+      const arr = [...prev];
+      const [moved] = arr.splice(dragIndex, 1);
+      arr.splice(targetIndex, 0, moved);
+      return arr;
+    });
+    // Keep mainPhotoIndex pointing to the same photo after reorder
+    setMainPhotoIndex((prev) => {
+      if (dragIndex === prev) return targetIndex;
+      if (dragIndex < prev && targetIndex >= prev) return prev - 1;
+      if (dragIndex > prev && targetIndex <= prev) return prev + 1;
+      return prev;
+    });
+    setDragIndex(null);
+    setDragOver(null);
+  }
+
+  function onFloorPlanDragOver(e: React.DragEvent) {
+    e.preventDefault();
+  }
+
+  function onFloorPlanDrop(targetIndex: number) {
+    if (dragIndex === null || dragIndex === targetIndex) {
+      setDragIndex(null);
+      setDragOver(null);
+      return;
+    }
+    setFloorPlanPhotos((prev) => {
+      const arr = [...prev];
+      const [moved] = arr.splice(dragIndex, 1);
+      arr.splice(targetIndex, 0, moved);
+      return arr;
+    });
+    setDragIndex(null);
+    setDragOver(null);
+  }
+
+  async function handleTranslate() {
+    const sourceKey = `description_${translateSource}` as keyof FormState;
+    const sourceText = (form[sourceKey] as string).trim();
+    if (!sourceText) {
+      setTranslateError("El campo de origen está vacío. Escribe la descripción antes de traducir.");
+      return;
+    }
+    const ALL_LANGS = ["es", "en", "fr", "de"] as const;
+    const targetLangs = ALL_LANGS.filter((l) => l !== translateSource);
+
+    setTranslating(true);
+    setTranslateError(null);
+    try {
+      const res = await fetch("/api/ai/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: sourceText, sourceLang: translateSource, targetLangs }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error desconocido");
+      const { translations } = data as { translations: Record<string, string> };
+      for (const lang of targetLangs) {
+        if (translations[lang]) set(`description_${lang}` as keyof FormState, translations[lang]);
+      }
+    } catch (e) {
+      setTranslateError(e instanceof Error ? e.message : "Error al traducir.");
+    } finally {
+      setTranslating(false);
     }
   }
 
@@ -461,6 +561,7 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
 
   return (
     <div style={styles.page}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       {/* Top bar */}
       <div style={styles.topBar}>
         <div style={styles.topBarLeft}>
@@ -713,6 +814,51 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
           {/* DESCRIPCIÓN */}
           {activeTab === "descripcion" && (
             <Section title="Descripción y enlaces">
+              {/* ── AI translation strip ── */}
+              <div style={styles.aiStrip}>
+                <span style={styles.aiLabel}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                  </svg>
+                  Traducir con IA desde:
+                </span>
+                <select
+                  value={translateSource}
+                  onChange={(e) => setTranslateSource(e.target.value as "es" | "en" | "fr" | "de")}
+                  style={styles.aiSelect}
+                >
+                  <option value="es">Español</option>
+                  <option value="en">English</option>
+                  <option value="fr">Français</option>
+                  <option value="de">Deutsch</option>
+                </select>
+                <button
+                  type="button"
+                  style={{
+                    ...styles.aiBtn,
+                    opacity: translating ? 0.6 : 1,
+                    cursor: translating ? "not-allowed" : "pointer",
+                  }}
+                  disabled={translating}
+                  onClick={handleTranslate}
+                >
+                  {translating ? (
+                    <>
+                      <span style={styles.aiSpinner} />
+                      Traduciendo…
+                    </>
+                  ) : (
+                    "Traducir al resto →"
+                  )}
+                </button>
+              </div>
+              {translateError && (
+                <div style={styles.aiError}>
+                  {translateError}
+                  <button onClick={() => setTranslateError(null)} style={styles.errorClose}>✕</button>
+                </div>
+              )}
+
               <Field label="Descripción (Español)" wide>
                 <Textarea value={form.description_es} onChange={(v) => set("description_es", v)} rows={6} placeholder="Descripción en español…" />
               </Field>
@@ -750,15 +896,29 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                 Los planos admiten imagen (JPG, PNG…) o <strong>PDF</strong>.
               </p>
               <SectionDivider label="Fotos de la propiedad" />
+              <p style={{ fontSize: 12, color: "#aaa", margin: "-4px 0 4px" }}>
+                Arrastra para reordenar · Clic para marcar como principal (se moverá a la primera posición)
+              </p>
               <div style={styles.photoGrid}>
                 {photos.map((p, i) => (
                   <div
                     key={i}
-                    style={{ ...styles.photoCard, ...(i === mainPhotoIndex ? styles.photoCardMain : {}) }}
-                    onClick={() => setMainPhotoIndex(i)}
-                    title="Clic para marcar como foto principal"
+                    draggable
+                    onDragStart={() => onPhotoDragStart(i)}
+                    onDragOver={(e) => onPhotoDragOver(e, i)}
+                    onDrop={() => onPhotoDrop(i)}
+                    onDragEnd={() => { setDragIndex(null); setDragOver(null); }}
+                    style={{
+                      ...styles.photoCard,
+                      ...(i === mainPhotoIndex ? styles.photoCardMain : {}),
+                      ...(dragOver === i && dragIndex !== i ? styles.photoCardDragOver : {}),
+                      opacity: dragIndex === i ? 0.4 : 1,
+                      cursor: "grab",
+                    }}
+                    onClick={() => setAsMain(i)}
+                    title="Clic para marcar como principal · Arrastra para reordenar"
                   >
-                    <img src={p.preview || p.url} alt="" style={styles.photoImg} />
+                    <img src={p.preview || thumbAdmin(p.url)} alt="" style={styles.photoImg} />
                     {i === mainPhotoIndex && <span style={styles.mainBadge}>Principal</span>}
                     <button style={styles.removePhotoBtn} onClick={(e) => { e.stopPropagation(); removePhoto(i, false); }}>✕</button>
                   </div>
@@ -773,7 +933,15 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
               <SectionDivider label="Planos" />
               <div style={styles.photoGrid}>
                 {floorPlanPhotos.map((p, i) => (
-                  <div key={i} style={styles.photoCard}>
+                  <div
+                    key={i}
+                    draggable
+                    onDragStart={() => onPhotoDragStart(i)}
+                    onDragOver={onFloorPlanDragOver}
+                    onDrop={() => onFloorPlanDrop(i)}
+                    onDragEnd={() => { setDragIndex(null); setDragOver(null); }}
+                    style={{ ...styles.photoCard, opacity: dragIndex === i ? 0.4 : 1, cursor: "grab" }}
+                  >
                     {(p.preview === "__pdf__" || p.url.endsWith(".pdf") || p.url.includes("/raw/upload/")) ? (
                       <div style={styles.pdfThumb}>
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#c62828" strokeWidth="1.5">
@@ -783,7 +951,7 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                         <span style={styles.pdfLabel}>{p.file?.name ?? "Plano PDF"}</span>
                       </div>
                     ) : (
-                      <img src={p.preview || p.url} alt="" style={styles.photoImg} />
+                      <img src={p.preview || thumbAdmin(p.url)} alt="" style={styles.photoImg} />
                     )}
                     <button style={styles.removePhotoBtn} onClick={() => removePhoto(i, true)}>✕</button>
                   </div>
@@ -914,6 +1082,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   photoGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10, marginBottom: 8 },
   photoCard: { position: "relative", aspectRatio: "4/3", borderRadius: 8, overflow: "hidden", border: "2px solid transparent", cursor: "pointer" },
   photoCardMain: { border: "2px solid var(--gold, #b8973a)" },
+  photoCardDragOver: { border: "2px dashed #666", background: "#f5f5f5" },
   photoImg: { width: "100%", height: "100%", objectFit: "cover" as const, display: "block" },
   mainBadge: { position: "absolute", bottom: 4, left: 4, background: "var(--gold, #b8973a)", color: "white", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4 },
   removePhotoBtn: { position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.55)", color: "white", border: "none", borderRadius: "50%", width: 22, height: 22, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 },
@@ -922,6 +1091,72 @@ const styles: { [key: string]: React.CSSProperties } = {
   pdfLabel: { fontSize: 10, color: "#c62828", textAlign: "center" as const, wordBreak: "break-all" as const, lineHeight: 1.3, maxWidth: "90%", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const },
   bottomBar: { display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, padding: "20px 0 8px", flexWrap: "wrap" as const },
   bottomError: { fontSize: 13, color: "#c62828", marginRight: "auto" },
+  // AI translation strip
+  aiStrip: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    background: "#f9f6ef",
+    border: "1px solid #e8dfc8",
+    borderRadius: 8,
+    padding: "10px 14px",
+    flexWrap: "wrap" as const,
+  },
+  aiLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#7a5c1e",
+    whiteSpace: "nowrap" as const,
+  },
+  aiSelect: {
+    border: "1px solid #e0d4b8",
+    borderRadius: 6,
+    padding: "6px 10px",
+    fontSize: 13,
+    fontFamily: "inherit",
+    background: "white",
+    color: "#1a1a1a",
+    outline: "none",
+    cursor: "pointer",
+  },
+  aiBtn: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    background: "var(--gold, #b8973a)",
+    color: "white",
+    border: "none",
+    borderRadius: 6,
+    padding: "7px 14px",
+    fontSize: 13,
+    fontWeight: 600,
+    fontFamily: "inherit",
+    transition: "opacity 0.15s",
+  },
+  aiSpinner: {
+    display: "inline-block",
+    width: 12,
+    height: 12,
+    border: "2px solid rgba(255,255,255,0.4)",
+    borderTopColor: "white",
+    borderRadius: "50%",
+    animation: "spin 0.7s linear infinite",
+  },
+  aiError: {
+    background: "#fff0f0",
+    border: "1px solid #fcd5d5",
+    borderRadius: 8,
+    padding: "10px 14px",
+    fontSize: 13,
+    color: "#c62828",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
 };
 
 const sectionStyles: { [key: string]: React.CSSProperties } = {
