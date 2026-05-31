@@ -2,6 +2,18 @@
 
 import { useLanguage } from "@/contexts/LanguageContext";
 
+// href arrays per column — language-independent, matches the order of links in i18n.ts
+const COLUMN_HREFS: string[][] = [
+  // Comprar
+  ["/comprar?type=apartment", "/comprar?type=house", "/comprar?type=penthouse", "/comprar?condition=new", "#"],
+  // Alquilar
+  ["/alquiler?type=apartment", "/alquiler?type=studio", "/alquiler?rentType=rent_temporary", "#"],
+  // Propietario
+  ["#", "#", "#"],
+  // Empresa
+  ["#", "#", "#"],
+];
+
 export default function Footer() {
   const { t } = useLanguage();
 
@@ -40,11 +52,17 @@ export default function Footer() {
               </div>
               <p style={styles.brandDesc}>{t.footer.brandDesc}</p>
             </div>
-            {t.footer.columns.map((col) => (
+            {t.footer.columns.map((col, colIdx) => (
               <div key={col.title}>
                 <h4 style={styles.colTitle}>{col.title}</h4>
-                {col.links.map((link) => (
-                  <a key={link} href="#" style={styles.colLink}>{link}</a>
+                {col.links.map((link, linkIdx) => (
+                  <a
+                    key={link}
+                    href={COLUMN_HREFS[colIdx]?.[linkIdx] ?? "#"}
+                    style={styles.colLink}
+                  >
+                    {link}
+                  </a>
                 ))}
               </div>
             ))}
@@ -52,8 +70,14 @@ export default function Footer() {
           <div className="footer-bottom" style={{ color: "rgba(255,255,255,0.5)" }}>
             <span>{t.footer.copyright}</span>
             <div style={{ display: "flex", gap: 16 }}>
-              {t.footer.legal.map((item) => (
-                <a key={item} href="#" style={styles.bottomLink}>{item}</a>
+              {t.footer.legal.map((item, i) => (
+                <a
+                  key={item}
+                  href={i === 1 ? "/politica-de-privacidad" : "#"}
+                  style={styles.bottomLink}
+                >
+                  {item}
+                </a>
               ))}
             </div>
           </div>

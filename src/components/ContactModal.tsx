@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PrivacyContent } from "@/components/PrivacyContent";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -78,7 +79,7 @@ function PrivacyModal({ title, onClose }: { title: string; onClose: () => void }
           <button style={s.closeBtn} onClick={onClose} aria-label="Cerrar">✕</button>
         </div>
         <div style={s.modalBody}>
-          <p>Política de privacidad — contenido pendiente de redacción.</p>
+          <PrivacyContent />
         </div>
       </div>
     </div>

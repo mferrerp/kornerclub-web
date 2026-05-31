@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
@@ -20,11 +21,13 @@ const PROPERTY_TYPE_OPTIONS: [PropertyType | "all", string][] = [
 ];
 
 export default function ComprarPage() {
+  const searchParams = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
-  const [propType, setPropType] = useState<string>("all");
+  // Filters — seeded from URL query params
+  const [propType, setPropType] = useState<string>(searchParams.get("type") ?? "all");
+  const [condition, setCondition] = useState<string>(searchParams.get("condition") ?? "all");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [minRooms, setMinRooms] = useState("");
@@ -50,6 +53,7 @@ export default function ComprarPage() {
 
   const filtered = properties
     .filter((p) => propType === "all" || p.property_type === propType)
+    .filter((p) => condition === "all" || p.condition === condition)
     .filter((p) => !minPrice || p.price >= parseFloat(minPrice))
     .filter((p) => !maxPrice || p.price <= parseFloat(maxPrice))
     .filter((p) => !minRooms || (p.rooms ?? 0) >= parseInt(minRooms))
@@ -60,10 +64,11 @@ export default function ComprarPage() {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 
-  const hasFilters = propType !== "all" || minPrice || maxPrice || minRooms || minSize;
+  const hasFilters = propType !== "all" || condition !== "all" || minPrice || maxPrice || minRooms || minSize;
 
   function clearFilters() {
     setPropType("all");
+    setCondition("all");
     setMinPrice("");
     setMaxPrice("");
     setMinRooms("");
@@ -131,6 +136,19 @@ export default function ComprarPage() {
                     {PROPERTY_TYPE_OPTIONS.map(([v, l]) => (
                       <option key={v} value={v}>{l}</option>
                     ))}
+                  </select>
+                </div>
+                <div style={styles.filterField}>
+                  <label style={styles.filterLabel}>Estado</label>
+                  <select
+                    value={condition}
+                    onChange={(e) => setCondition(e.target.value)}
+                    style={styles.filterSelect}
+                  >
+                    <option value="all">Todos</option>
+                    <option value="new">Obra nueva</option>
+                    <option value="good">Buen estado</option>
+                    <option value="renovation">A reformar</option>
                   </select>
                 </div>
                 <div style={styles.filterField}>
