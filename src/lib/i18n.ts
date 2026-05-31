@@ -53,6 +53,9 @@ export interface T {
     successSub: string;
     successRef: string;
     errorMsg: string;
+    privacyNotice: string;
+    privacyLink: string;
+    privacyNoticeSuffix: string;
   };
   footer: {
     brandDesc: string;
@@ -114,6 +117,9 @@ export const translations: Record<Lang, T> = {
       successSub: "Un agente se pondrá en contacto contigo pronto.",
       successRef: "Referencia:",
       errorMsg: "Algo ha fallado. Por favor, inténtalo de nuevo.",
+      privacyNotice: "Al enviar este formulario aceptas nuestra ",
+      privacyLink: "Política de Privacidad",
+      privacyNoticeSuffix: ".",
     },
     footer: {
       brandDesc: "Inmobiliaria digital en Madrid. Especialistas en acompañar a recién llegados en su proceso de instalación y búsqueda de vivienda. Tu barrio, tu Korner.",
@@ -179,6 +185,9 @@ export const translations: Record<Lang, T> = {
       successSub: "An agent will get in touch with you soon.",
       successRef: "Reference:",
       errorMsg: "Something went wrong. Please try again.",
+      privacyNotice: "By submitting this form you accept our ",
+      privacyLink: "Privacy Policy",
+      privacyNoticeSuffix: ".",
     },
     footer: {
       brandDesc: "Digital real estate agency in Madrid. Specialists in supporting newcomers with their relocation and home search. Your neighbourhood, your Korner.",
@@ -244,6 +253,9 @@ export const translations: Record<Lang, T> = {
       successSub: "Un agent vous contactera prochainement.",
       successRef: "Référence :",
       errorMsg: "Une erreur s'est produite. Veuillez réessayer.",
+      privacyNotice: "En soumettant ce formulaire, vous acceptez notre ",
+      privacyLink: "Politique de confidentialité",
+      privacyNoticeSuffix: ".",
     },
     footer: {
       brandDesc: "Agence immobilière digitale à Madrid. Spécialistes pour accompagner les nouveaux arrivants dans leur installation et leur recherche de logement. Votre quartier, votre Korner.",
@@ -309,6 +321,9 @@ export const translations: Record<Lang, T> = {
       successSub: "Ein Agent wird sich in Kürze bei Ihnen melden.",
       successRef: "Referenz:",
       errorMsg: "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+      privacyNotice: "Mit dem Absenden dieses Formulars stimmen Sie unserer ",
+      privacyLink: "Datenschutzrichtlinie",
+      privacyNoticeSuffix: " zu.",
     },
     footer: {
       brandDesc: "Digitale Immobilienagentur in Madrid. Spezialisten für die Begleitung von Neuankömmlingen bei ihrer Einrichtung und Wohnungssuche. Ihr Viertel, Ihr Korner.",

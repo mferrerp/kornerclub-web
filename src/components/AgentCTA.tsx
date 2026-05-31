@@ -70,6 +70,35 @@ function CountryCodePicker({ value, onChange }: { value: string; onChange: (v: s
   );
 }
 
+function PrivacyModal({ title, onClose }: { title: string; onClose: () => void }) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  return (
+    <div
+      style={styles.overlay}
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div ref={modalRef} style={styles.modal}>
+        <div style={styles.modalHeader}>
+          <h2 style={styles.modalTitle}>{title}</h2>
+          <button style={styles.closeBtn} onClick={onClose} aria-label="Cerrar">✕</button>
+        </div>
+        <div style={styles.modalBody}>
+          <p>prueba</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AgentCTA() {
   const { t } = useLanguage();
   const [name, setName] = useState("");
@@ -79,6 +108,7 @@ export default function AgentCTA() {
   const [purposeIdx, setPurposeIdx] = useState(0);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [requestNumber, setRequestNumber] = useState("");
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   const isValid = name.trim().length > 0 && EMAIL_RE.test(email.trim());
 
@@ -101,81 +131,97 @@ export default function AgentCTA() {
   }
 
   return (
-    <section id="contacto" style={styles.section} className="agent-section">
-      <div>
-        <h2 style={styles.h2}>{t.agent.h2}</h2>
-        <p style={styles.desc}>{t.agent.desc}</p>
+    <>
+      {showPrivacy && (
+        <PrivacyModal title={t.agent.privacyLink} onClose={() => setShowPrivacy(false)} />
+      )}
+      <section id="contacto" style={styles.section} className="agent-section">
+        <div>
+          <h2 style={styles.h2}>{t.agent.h2}</h2>
+          <p style={styles.desc}>{t.agent.desc}</p>
 
-        {status === "success" ? (
-          <div style={styles.successBox}>
-            <p style={styles.successTitle}>{t.agent.successTitle}</p>
-            <p style={styles.successSub}>
-              {t.agent.successSub}<br />
-              {t.agent.successRef} <strong>Solicitud {requestNumber}</strong>
-            </p>
-          </div>
-        ) : (
-          <div style={styles.form}>
-            <input
-              type="text"
-              placeholder={t.agent.namePlaceholder}
-              style={styles.input}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input
-              type="email"
-              placeholder={t.agent.emailPlaceholder}
-              style={styles.input}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <div style={styles.phoneRow}>
-              <CountryCodePicker value={countryCode} onChange={setCountryCode} />
-              <input
-                type="tel"
-                placeholder={t.agent.phonePlaceholder}
-                style={{ ...styles.input, flex: 1 }}
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
+          {status === "success" ? (
+            <div style={styles.successBox}>
+              <p style={styles.successTitle}>{t.agent.successTitle}</p>
+              <p style={styles.successSub}>
+                {t.agent.successSub}<br />
+                {t.agent.successRef} <strong>Solicitud {requestNumber}</strong>
+              </p>
             </div>
-            <select
-              style={styles.input}
-              value={purposeIdx}
-              onChange={(e) => setPurposeIdx(Number(e.target.value))}
-            >
-              {t.agent.purposes.map((p, i) => (
-                <option key={i} value={i}>{p}</option>
-              ))}
-            </select>
+          ) : (
+            <div style={styles.form}>
+              <input
+                type="text"
+                placeholder={t.agent.namePlaceholder}
+                style={styles.input}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <input
+                type="email"
+                placeholder={t.agent.emailPlaceholder}
+                style={styles.input}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <div style={styles.phoneRow}>
+                <CountryCodePicker value={countryCode} onChange={setCountryCode} />
+                <input
+                  type="tel"
+                  placeholder={t.agent.phonePlaceholder}
+                  style={{ ...styles.input, flex: 1 }}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              <select
+                style={styles.input}
+                value={purposeIdx}
+                onChange={(e) => setPurposeIdx(Number(e.target.value))}
+              >
+                {t.agent.purposes.map((p, i) => (
+                  <option key={i} value={i}>{p}</option>
+                ))}
+              </select>
 
-            {status === "error" && (
-              <p style={styles.errorMsg}>{t.agent.errorMsg}</p>
-            )}
+              {status === "error" && (
+                <p style={styles.errorMsg}>{t.agent.errorMsg}</p>
+              )}
 
-            <button
-              style={{
-                ...styles.btn,
-                opacity: isValid && status !== "loading" ? 1 : 0.45,
-                cursor: isValid && status !== "loading" ? "pointer" : "not-allowed",
-              }}
-              disabled={!isValid || status === "loading"}
-              onClick={handleSubmit}
-            >
-              {status === "loading" ? t.agent.sending : t.agent.btn}
-            </button>
-          </div>
-        )}
-      </div>
-      <div style={styles.imageWrap} className="agent-image">
-        <img
-          src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"
-          alt="Agente Korner Club"
-          style={styles.img}
-        />
-      </div>
-    </section>
+              <button
+                style={{
+                  ...styles.btn,
+                  opacity: isValid && status !== "loading" ? 1 : 0.45,
+                  cursor: isValid && status !== "loading" ? "pointer" : "not-allowed",
+                }}
+                disabled={!isValid || status === "loading"}
+                onClick={handleSubmit}
+              >
+                {status === "loading" ? t.agent.sending : t.agent.btn}
+              </button>
+              <p style={styles.privacyNotice}>
+                {t.agent.privacyNotice}
+                <button
+                  type="button"
+                  style={styles.privacyLink}
+                  onClick={() => setShowPrivacy(true)}
+                >
+                  {t.agent.privacyLink}
+                </button>
+                {t.agent.privacyNoticeSuffix}
+              </p>
+            </div>
+          )}
+        </div>
+        <div style={styles.imageWrap} className="agent-image">
+          <img
+            src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"
+            alt="Agente Korner Club"
+            style={styles.img}
+          />
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -247,6 +293,17 @@ const styles: { [key: string]: React.CSSProperties } = {
     transition: "opacity 0.15s",
   },
   errorMsg: { color: "#c0392b", fontSize: 13, margin: 0 },
+  privacyNotice: { fontSize: 12, color: "var(--text-light)", margin: "4px 0 0", lineHeight: 1.5 },
+  privacyLink: {
+    background: "none",
+    border: "none",
+    padding: 0,
+    fontSize: 12,
+    color: "var(--text-light)",
+    textDecoration: "underline",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
   successBox: {
     background: "#f0faf4",
     border: "1px solid #a8d5b5",
@@ -255,4 +312,54 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   successTitle: { fontWeight: 700, fontSize: 17, margin: "0 0 8px" },
   successSub: { color: "var(--text-light)", lineHeight: 1.6, margin: 0 },
+  overlay: {
+    position: "fixed" as const,
+    inset: 0,
+    background: "rgba(0,0,0,0.45)",
+    zIndex: 1000,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modal: {
+    background: "white",
+    borderRadius: 12,
+    boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+    width: "100%",
+    maxWidth: 640,
+    maxHeight: "80vh",
+    display: "flex",
+    flexDirection: "column" as const,
+    overflow: "hidden",
+  },
+  modalHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "20px 24px",
+    borderBottom: "1px solid var(--border)",
+    flexShrink: 0,
+  },
+  modalTitle: {
+    fontFamily: "var(--font-playfair), serif",
+    fontSize: 20,
+    margin: 0,
+  },
+  closeBtn: {
+    background: "none",
+    border: "none",
+    fontSize: 18,
+    cursor: "pointer",
+    color: "var(--text-light)",
+    lineHeight: 1,
+    padding: 4,
+  },
+  modalBody: {
+    padding: "24px",
+    overflowY: "auto" as const,
+    lineHeight: 1.7,
+    fontSize: 14,
+    color: "var(--text)",
+  },
 };

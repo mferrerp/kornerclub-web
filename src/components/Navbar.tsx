@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Lang } from "@/lib/i18n";
+import AuthModal from "@/components/AuthModal";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 const languages: { code: Lang; flagCode: string; label: string }[] = [
   { code: "es", flagCode: "es", label: "Español" },
@@ -11,7 +14,7 @@ const languages: { code: Lang; flagCode: string; label: string }[] = [
   { code: "de", flagCode: "de", label: "Deutsch" },
 ];
 
-const NAV_HREFS = ["#", "#", "#", "#", "#", "#contacto"];
+const NAV_HREFS = ["/comprar", "/alquiler", "#", "#", "#", "#contacto"];
 
 function IconUser() {
   return (
@@ -26,11 +29,61 @@ export default function Navbar() {
   const { lang, setLang, t } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  async function checkRole(userId: string) {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+    setIsAdmin(!!data && ["admin", "agent"].includes(data.role));
+  }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const u = data.session?.user ?? null;
+      setUser(u);
+      if (u) checkRole(u.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const u = session?.user ?? null;
+      setUser(u);
+      if (u) checkRole(u.id);
+      else setIsAdmin(false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const firstName = user?.user_metadata?.full_name?.split(" ")[0]
+    ?? user?.user_metadata?.name?.split(" ")[0]
+    ?? user?.email?.split("@")[0]
+    ?? null;
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    setUserMenuOpen(false);
+  }
 
   const currentLang = languages.find((l) => l.code === lang) ?? languages[0];
 
   return (
     <>
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
       <style>{`
         .nb-nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
         .nb-hamburger { display: none; }
@@ -62,7 +115,7 @@ export default function Navbar() {
         <div style={styles.inner}>
           {/* Logo */}
           <a href="/" className="nb-logo" style={styles.logo}>
-            <img src="/logo-icon.png" alt="Korner Club" style={styles.logoMark} />
+            <img src="/brand/monograma-negro-transparente.svg" alt="Korner Club" style={styles.logoMark} />
             <div className="nb-logo-text-wrap" style={styles.logoTextWrap}>
               KORNER<span style={{ ...styles.logoTextSpan, marginLeft: 2 }}>CLUB</span>
             </div>
@@ -117,11 +170,36 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Iniciar sesión */}
-            <button style={styles.btnOutline}>
-              <IconUser />
-              <span className="nb-btn-text">{t.nav.login}</span>
-            </button>
+            {/* Iniciar sesión / Usuario */}
+            {user ? (
+              <div ref={userMenuRef} style={{ position: "relative" }}>
+                <button style={styles.btnOutline} onClick={() => setUserMenuOpen((o) => !o)}>
+                  <IconUser />
+                  <span className="nb-btn-text" style={{ maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {firstName}
+                  </span>
+                  <span style={{ fontSize: 10, color: "var(--mid-gray)" }}>▾</span>
+                </button>
+                {userMenuOpen && (
+                  <div style={styles.userDropdown}>
+                    <div style={styles.userDropdownEmail}>{user.email}</div>
+                    {isAdmin && (
+                      <a href="/admin/propiedades" style={styles.userDropdownItem}>
+                        Panel de administración
+                      </a>
+                    )}
+                    <button style={{ ...styles.userDropdownItem, borderTop: "1px solid var(--border)" }} onClick={handleSignOut}>
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button style={styles.btnOutline} onClick={() => setShowAuth(true)}>
+                <IconUser />
+                <span className="nb-btn-text">{t.nav.login}</span>
+              </button>
+            )}
 
             {/* Hamburger — mobile only */}
             <button
@@ -344,6 +422,42 @@ const styles: { [key: string]: React.CSSProperties } = {
     letterSpacing: 1,
     color: "var(--mid-gray)",
     marginBottom: 10,
+  },
+  userDropdown: {
+    position: "absolute" as const,
+    top: "calc(100% + 6px)",
+    right: 0,
+    background: "white",
+    border: "1px solid var(--border)",
+    borderRadius: "var(--radius)",
+    boxShadow: "var(--shadow-md)",
+    minWidth: 200,
+    overflow: "hidden",
+    zIndex: 200,
+  },
+  userDropdownEmail: {
+    padding: "10px 14px",
+    fontSize: 12,
+    color: "var(--mid-gray)",
+    borderBottom: "1px solid var(--border)",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
+  },
+  userDropdownItem: {
+    display: "block",
+    width: "100%",
+    padding: "10px 14px",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "var(--text)",
+    cursor: "pointer",
+    border: "none",
+    background: "none",
+    fontFamily: "inherit",
+    textAlign: "left" as const,
+    textDecoration: "none",
+    boxSizing: "border-box" as const,
   },
   mobileLangOption: {
     display: "flex",
