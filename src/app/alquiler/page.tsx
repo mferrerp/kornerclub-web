@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -29,6 +29,14 @@ const PROPERTY_TYPE_OPTIONS: [PropertyType | "all", string][] = [
 ];
 
 export default function AlquilerPage() {
+  return (
+    <Suspense>
+      <AlquilerPageContent />
+    </Suspense>
+  );
+}
+
+function AlquilerPageContent() {
   const searchParams = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
