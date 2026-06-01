@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -284,6 +284,23 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
   const [translateSource, setTranslateSource] = useState<"es" | "en" | "fr" | "de">("es");
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
+  const [orderingPhotos, setOrderingPhotos] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [fetchingCatastro, setFetchingCatastro] = useState(false);
+
+  // Auto-generate sequential internal reference on create
+  useEffect(() => {
+    if (mode !== "create") return;
+    fetch("/api/internal-ref")
+      .then((r) => r.json())
+      .then(({ ref }) => { if (ref) set("internal_reference", ref); })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const [catastroMsg, setCatastroMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [portals, setPortals] = useState<string[]>(
+    (initialProperty as any)?.portals ?? []
+  );
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -545,7 +562,90 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
     }
   }
 
+  async function handleFetchCatastro() {
+    const rc = form.cadastral_reference.trim();
+    if (!rc) return;
+    setFetchingCatastro(true);
+    setCatastroMsg(null);
+    try {
+      const res = await fetch(`/api/catastro?rc=${encodeURIComponent(rc)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setCatastroMsg({ type: "error", text: data.error ?? "Error al consultar el Catastro." });
+        return;
+      }
+      // Pre-fill available fields (only if currently empty to avoid overwriting)
+      const updates: Partial<FormState> = {};
+      if (data.sizem2 && !form.size_m2)           updates.size_m2 = String(data.sizem2);
+      if (data.constructionYear && !form.construction_year)
+        updates.construction_year = String(data.constructionYear);
+
+      const count = Object.keys(updates).length;
+      if (count > 0) {
+        Object.entries(updates).forEach(([k, v]) => set(k as keyof FormState, v as string));
+        const filled = [
+          updates.size_m2 && `superficie ${data.sizem2} m²`,
+          updates.construction_year && `año ${data.constructionYear}`,
+        ].filter(Boolean).join(", ");
+        setCatastroMsg({ type: "ok", text: `✓ Importado: ${filled}.` });
+      } else {
+        setCatastroMsg({ type: "ok", text: "✓ Los campos ya estaban rellenados. Sin cambios." });
+      }
+    } catch {
+      setCatastroMsg({ type: "error", text: "Error de conexión al consultar el Catastro." });
+    } finally {
+      setFetchingCatastro(false);
+    }
+  }
+
+  async function handleOrderPhotos() {
+    const uploadedPhotos = photos.filter((p) => p.url.includes("res.cloudinary.com"));
+    if (uploadedPhotos.length < 2) {
+      setOrderError("Necesitas al menos 2 fotos ya guardadas para usar el orden automático. Guarda primero el borrador.");
+      return;
+    }
+    setOrderError(null);
+    setOrderingPhotos(true);
+    try {
+      const urls = uploadedPhotos.map((p) => p.url);
+      const res = await fetch("/api/ai/order-photos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setOrderError(data.error ?? "Error al ordenar fotos."); return; }
+      // Rebuild photos array in the new order (non-uploaded photos appended at end)
+      if (!Array.isArray(data.orderedUrls) || data.orderedUrls.length === 0) {
+        setOrderError("La IA no devolvió un orden válido. Las fotos no se han modificado.");
+        return;
+      }
+
+      const newOrder = (data.orderedUrls as string[])
+        .map((url: string) => photos.find((p) => p?.url === url))
+        .filter(Boolean) as typeof photos;
+      const pending = photos.filter((p) => !p?.url?.includes("res.cloudinary.com"));
+
+      // Safety: only apply if we recovered at least as many photos as we sent
+      if (newOrder.length < uploadedPhotos.length) {
+        setOrderError(
+          `Error: la IA devolvió ${newOrder.length} de ${uploadedPhotos.length} fotos. ` +
+          "El orden no se ha cambiado."
+        );
+        return;
+      }
+
+      setPhotos([...newOrder, ...pending]);
+      setMainPhotoIndex(0);
+    } catch {
+      setOrderError("Error de conexión al ordenar fotos.");
+    } finally {
+      setOrderingPhotos(false);
+    }
+  }
+
   const isEdit = mode === "edit";
+  const isPublished = initialProperty?.is_published ?? false;
   const tabs = [
     { id: "tipo", label: "Tipo" },
     { id: "precio", label: "Precio" },
@@ -574,12 +674,25 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
         </div>
         <div style={styles.topBarRight}>
           <Link href="/admin/propiedades" style={styles.btnCancel}>Cancelar</Link>
-          <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(false)}>
-            {saving && !form.is_published ? savingLabel : "Guardar borrador"}
-          </button>
-          <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
-            {saving ? savingLabel : isEdit ? "Guardar y publicar" : "Publicar"}
-          </button>
+          {isPublished ? (
+            <>
+              <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
+                {saving ? savingLabel : "Actualizar publicación"}
+              </button>
+              <button style={{ ...styles.btnPublish, opacity: 0.4, cursor: "not-allowed" }} disabled title="Integración con portales próximamente">
+                Publicar en portales
+              </button>
+            </>
+          ) : (
+            <>
+              <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(false)}>
+                {saving ? savingLabel : "Guardar borrador"}
+              </button>
+              <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
+                {saving ? savingLabel : "Publicar"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -622,10 +735,68 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
               </Row>
               <Row>
                 <Field label="Referencia interna">
-                  <TextInput value={form.internal_reference} onChange={(v) => set("internal_reference", v)} placeholder="KC-001" />
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "9px 14px",
+                    background: "#f5f5f3",
+                    border: "1.5px solid #e8e8e8",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: form.internal_reference ? "#1a1a1a" : "#bbb",
+                    fontFamily: "inherit",
+                    letterSpacing: "0.03em",
+                  }}>
+                    {form.internal_reference || "Generando…"}
+                    <span style={{ fontSize: 11, fontWeight: 400, color: "#aaa", marginLeft: "auto" }}>
+                      Auto
+                    </span>
+                  </div>
                 </Field>
                 <Field label="Referencia catastral">
-                  <TextInput value={form.cadastral_reference} onChange={(v) => set("cadastral_reference", v)} placeholder="7836214VK4773H0001WA" />
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <div style={{ flex: 1 }}>
+                      <TextInput
+                        value={form.cadastral_reference}
+                        onChange={(v) => { set("cadastral_reference", v); setCatastroMsg(null); }}
+                        placeholder="7836214VK4773H0001WA"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      title="Importar superficie construida y año de construcción desde el Catastro"
+                      style={{
+                        flexShrink: 0,
+                        background: form.cadastral_reference.trim().length >= 14 ? "var(--gold, #b8973a)" : "#e8e8e8",
+                        color: form.cadastral_reference.trim().length >= 14 ? "white" : "#aaa",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "9px 14px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: form.cadastral_reference.trim().length >= 14 ? "pointer" : "not-allowed",
+                        fontFamily: "inherit",
+                        whiteSpace: "nowrap",
+                        transition: "background 0.15s",
+                      }}
+                      disabled={form.cadastral_reference.trim().length < 14 || fetchingCatastro}
+                      onClick={handleFetchCatastro}
+                    >
+                      {fetchingCatastro ? "Consultando…" : "↓ Catastro"}
+                    </button>
+                  </div>
+                  {catastroMsg && (
+                    <p style={{
+                      fontSize: 12,
+                      margin: "4px 0 0",
+                      color: catastroMsg.type === "ok" ? "#2e7d32" : "#c62828",
+                      lineHeight: 1.4,
+                    }}>
+                      {catastroMsg.text}
+                    </p>
+                  )}
                 </Field>
               </Row>
               <Row>
@@ -895,6 +1066,31 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                 Haz clic en una foto para marcarla como principal.
                 Los planos admiten imagen (JPG, PNG…) o <strong>PDF</strong>.
               </p>
+
+              {/* ── AI photo ordering strip ── */}
+              <div style={styles.aiStrip}>
+                <span style={styles.aiLabel}>
+                  ✦ Orden IA
+                </span>
+                <span style={{ fontSize: 12, color: "#666", flex: 1 }}>
+                  Claude analiza cada foto y las ordena según las best practices de portales inmobiliarios españoles (Idealista, Fotocasa).
+                </span>
+                <button
+                  style={{
+                    ...styles.aiBtn,
+                    opacity: (photos.filter(p => p?.url?.includes("res.cloudinary.com")).length < 2 || orderingPhotos) ? 0.45 : 1,
+                    cursor: (photos.filter(p => p?.url?.includes("res.cloudinary.com")).length < 2 || orderingPhotos) ? "not-allowed" : "pointer",
+                  }}
+                  disabled={photos.filter(p => p?.url?.includes("res.cloudinary.com")).length < 2 || orderingPhotos}
+                  onClick={handleOrderPhotos}
+                >
+                  {orderingPhotos ? (
+                    <><span style={styles.aiSpinner} />Analizando…</>
+                  ) : "Ordenar con IA →"}
+                </button>
+              </div>
+              {orderError && <p style={styles.aiError}>{orderError}</p>}
+
               <SectionDivider label="Fotos de la propiedad" />
               <p style={{ fontSize: 12, color: "#aaa", margin: "-4px 0 4px" }}>
                 Arrastra para reordenar · Clic para marcar como principal (se moverá a la primera posición)
@@ -979,18 +1175,61 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
               <Field label="Notas privadas" wide>
                 <Textarea value={form.private_notes} onChange={(v) => set("private_notes", v)} rows={4} placeholder="Notas internas, no visibles en la web pública…" />
               </Field>
+
+              {/* Portal publishing */}
+              <SectionDivider label="Publicación en portales" />
+              <Field label="Selecciona los portales donde publicar" wide>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
+                  {[
+                    { id: "idealista", label: "Idealista", url: "idealista.com" },
+                    { id: "fotocasa", label: "Fotocasa", url: "fotocasa.es" },
+                    { id: "habitaclia", label: "Habitaclia", url: "habitaclia.com" },
+                  ].map((portal) => (
+                    <label key={portal.id} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontSize: 14, color: "#1a1a1a" }}>
+                      <input
+                        type="checkbox"
+                        checked={portals.includes(portal.id)}
+                        onChange={(e) =>
+                          setPortals((prev) =>
+                            e.target.checked ? [...prev, portal.id] : prev.filter((p) => p !== portal.id)
+                          )
+                        }
+                        style={{ width: 16, height: 16, accentColor: "var(--gold)", cursor: "pointer" }}
+                      />
+                      <span style={{ fontWeight: 500 }}>{portal.label}</span>
+                      <span style={{ fontSize: 12, color: "#aaa" }}>{portal.url}</span>
+                    </label>
+                  ))}
+                </div>
+                <p style={{ fontSize: 11, color: "#aaa", margin: "8px 0 0", lineHeight: 1.5 }}>
+                  La publicación automática en portales estará disponible próximamente. Por ahora esta selección se guarda para cuando se active la integración.
+                </p>
+              </Field>
             </Section>
           )}
 
           {/* Bottom bar */}
           <div style={styles.bottomBar}>
             {error && <span style={styles.bottomError}>{error}</span>}
-            <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(false)}>
-              {saving ? savingLabel : "Guardar borrador"}
-            </button>
-            <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
-              {saving ? savingLabel : isEdit ? "Guardar y publicar" : "Publicar"}
-            </button>
+            {isPublished ? (
+              <>
+                <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
+                  {saving ? savingLabel : "Actualizar publicación"}
+                </button>
+                <button style={{ ...styles.btnPublish, opacity: 0.4, cursor: "not-allowed" }} disabled title="Integración con portales próximamente">
+                  Publicar en portales
+                </button>
+              </>
+            ) : (
+              <>
+                <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(false)}>
+                  {saving ? savingLabel : "Guardar borrador"}
+                </button>
+                <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
+                  {saving ? savingLabel : "Publicar"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
