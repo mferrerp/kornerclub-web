@@ -16,8 +16,8 @@ import { NextRequest, NextResponse } from "next/server";
  *   dm   → municipio
  */
 
-// The Catastro service runs on HTTP (legacy infra) — HTTPS causes 500s on some nodes
-const SOAP_URL =
+// The Catastro service runs on HTTP only — HTTPS causes 500s (legacy infra)
+const CATASTRO_BASE =
   "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCallejero.asmx";
 
 /** Extract a single XML element's text content (case-insensitive tag). */
@@ -25,22 +25,6 @@ function xmlText(xml: string, tag: string): string | null {
   const re = new RegExp(`<${tag}[^>]*>([^<]*)<\/${tag}>`, "i");
   const m = xml.match(re);
   return m ? m[1].trim() || null : null;
-}
-
-function buildSoapEnvelope(refCat: string): string {
-  return `<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <Consulta_DNPRC xmlns="http://www.catastro.meh.es/">
-      <Provincia></Provincia>
-      <Municipio></Municipio>
-      <RefCat>${refCat}</RefCat>
-    </Consulta_DNPRC>
-  </soap:Body>
-</soap:Envelope>`;
 }
 
 export async function GET(request: NextRequest) {
@@ -60,15 +44,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const url =
+    `${CATASTRO_BASE}/Consulta_DNPRC` +
+    `?Provincia=&Municipio=&RefCat=${encodeURIComponent(refCat)}`;
+
   let catastroRes: Response;
   try {
-    catastroRes = await fetch(SOAP_URL, {
-      method: "POST",
+    catastroRes = await fetch(url, {
+      method: "GET",
       headers: {
-        "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": "",
+        // Mimic a browser — some servers block requests without a User-Agent
+        "User-Agent": "Mozilla/5.0 (compatible; KornerClub/1.0)",
+        "Accept": "text/xml, application/xml",
       },
-      body: buildSoapEnvelope(refCat),
       signal: AbortSignal.timeout(12_000),
     });
   } catch (err: unknown) {
@@ -79,16 +67,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const xml = await catastroRes.text();
-
   if (!catastroRes.ok) {
-    // Try to surface a useful error from the XML body before giving up
-    const soapFault = xmlText(xml, "faultstring") ?? xmlText(xml, "faultcode");
+    const body = await catastroRes.text().catch(() => "");
+    const detail = xmlText(body, "faultstring") ?? xmlText(body, "Message") ?? "";
     return NextResponse.json(
-      { error: soapFault ?? `El Catastro devolvió un error HTTP ${catastroRes.status}.` },
+      { error: `El Catastro devolvió HTTP ${catastroRes.status}${detail ? `: ${detail}` : ""}.` },
       { status: 502 }
     );
   }
+
+  const xml = await catastroRes.text();
 
   // Check for application-level errors embedded in the XML response
   const cod = xmlText(xml, "cod");
