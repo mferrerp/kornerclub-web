@@ -14,13 +14,14 @@ function xmlText(xml: string, tag: string): string | null {
 // Try multiple URL strategies in order
 function buildUrls(refCat: string): string[] {
   const base = "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCallejero.asmx/Consulta_DNPRC";
+  const rc = encodeURIComponent(refCat);
   return [
-    // Strategy 1: RefCat only (no empty params)
-    `${base}?RefCat=${encodeURIComponent(refCat)}`,
-    // Strategy 2: empty Provincia + Municipio
-    `${base}?Provincia=&Municipio=&RefCat=${encodeURIComponent(refCat)}`,
-    // Strategy 3: HTTPS variant with empty params
-    `${base.replace("http://", "https://")}?Provincia=&Municipio=&RefCat=${encodeURIComponent(refCat)}`,
+    // Strategy 1: RC only (correct param name, no Provincia/Municipio)
+    `${base}?RC=${rc}`,
+    // Strategy 2: RC + empty Provincia/Municipio
+    `${base}?Provincia=&Municipio=&RC=${rc}`,
+    // Strategy 3: HTTPS + RC
+    `${base.replace("http://", "https://")}?RC=${rc}`,
   ];
 }
 
