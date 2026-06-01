@@ -11,6 +11,9 @@ import {
   STATUS_LABELS,
 } from "@/types/property";
 
+const formatPrice = (n: number) =>
+  n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
 export default function AdminPropiedadesPage() {
   const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -229,7 +232,7 @@ export default function AdminPropiedadesPage() {
                     {/* Price */}
                     <td style={styles.td}>
                       <div style={styles.price}>
-                        {p.price.toLocaleString("es-ES")} €
+                        {formatPrice(p.price)} €
                         {p.operation_type !== "sale" && <span style={styles.pricePer}>/mes</span>}
                       </div>
                       {p.size_m2 && (
