@@ -26,6 +26,22 @@ export const metadata: Metadata = {
   title: "Korner Club | Inmobiliaria en Madrid — Compra, Venta y Alquiler",
   description:
     "Inmobiliaria digital en Madrid. Especialistas en acompañar a recién llegados en su proceso de instalación y búsqueda de vivienda. Tu barrio, tu Korner.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  metadataBase: new URL("https://kornerclub.es"),
+  openGraph: {
+    title: "Korner Club | Inmobiliaria en Madrid",
+    description: "Inmobiliaria digital en Madrid. Especialistas en acompañar a recién llegados. Tu barrio, tu Korner.",
+    url: "https://kornerclub.es",
+    siteName: "Korner Club",
+    locale: "es_ES",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
