@@ -16,9 +16,28 @@ const languages: { code: Lang; flagCode: string; label: string }[] = [
   { code: "de", flagCode: "de", label: "Deutsch" },
 ];
 
-// Indices 3 ("Vivir en Madrid") and 5 ("Contacto") open modals instead of navigating
-const NAV_HREFS = ["/comprar", "/alquiler", "/proximamente", null, "/proximamente", null];
-const MODAL_TRIGGER: Record<number, "vivir" | "contact"> = { 3: "vivir", 5: "contact" };
+// 5 nav items: Comprar, Alquilar, Servicios al Propietario, Servicios al Inquilino, Contacto
+const NAV_HREFS = ["/comprar", "/alquiler", null, null, null];
+// Index 4 (Contacto) opens the contact modal
+const MODAL_TRIGGER: Record<number, "contact"> = { 4: "contact" };
+
+type DropdownItem = { label: string; href?: string; modal?: "vivir" };
+// Dropdowns for indices 2 and 3
+const DROPDOWN_ITEMS: Record<number, DropdownItem[]> = {
+  2: [
+    { label: "Valoración gratuita",              href: "/proximamente" },
+    { label: "Fotografía Profesional",           href: "/proximamente" },
+    { label: "Asesoría",                         href: "/proximamente" },
+    { label: "Gestión Integral de Propiedades",  href: "/proximamente" },
+    { label: "Home Staging",                     href: "/proximamente" },
+  ],
+  3: [
+    { label: "Vivir en Madrid",                  modal: "vivir" },
+    { label: "Personal Shopper Inmobiliario",    href: "/proximamente" },
+    { label: "Servicio de Concierge",            href: "/proximamente" },
+    { label: "Gestión de Trámites",              href: "/proximamente" },
+  ],
+};
 
 function IconUser() {
   return (
@@ -36,12 +55,27 @@ export default function Navbar() {
   const [showAuth, setShowAuth] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [vivirOpen, setVivirOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<number | null>(null);
+  const dropdownTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Use a ref so the value is set synchronously before the re-render triggered by setContactOpen
   const lockedPurposeRef = useRef<string | undefined>(undefined);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  function openDd(i: number) {
+    if (dropdownTimer.current) clearTimeout(dropdownTimer.current);
+    setOpenDropdown(i);
+  }
+  function closeDd() {
+    dropdownTimer.current = setTimeout(() => setOpenDropdown(null), 120);
+  }
+  function handleDropdownItem(item: DropdownItem) {
+    setOpenDropdown(null);
+    if (item.modal === "vivir") setVivirOpen(true);
+  }
 
   async function checkRole(userId: string) {
     const { data } = await supabase
@@ -83,6 +117,13 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [contactOpen, vivirOpen]);
 
+  // Allow other components to open the auth modal via custom event
+  useEffect(() => {
+    const handler = () => setShowAuth(true);
+    window.addEventListener("open-auth-modal", handler);
+    return () => window.removeEventListener("open-auth-modal", handler);
+  }, []);
+
   // External trigger (e.g. from detail page "Solicitar información" button)
   useEffect(() => {
     const handler = (e: Event) => {
@@ -123,7 +164,7 @@ export default function Navbar() {
         />
       )}
       <style>{`
-        .nb-nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+        .nb-nav-links { display: flex; align-items: center; gap: 0; list-style: none; }
         .nb-hamburger { display: none; }
         .nb-lang-code { display: inline; }
         .nb-lang-chevron { display: inline; }
@@ -133,6 +174,40 @@ export default function Navbar() {
         .nb-lang-desktop { display: flex; }
         .nb-lang-mobile { display: none; }
 
+        /* Gold hover on all nav items */
+        .nb-nav-link:hover,
+        .nb-nav-link-btn:hover { color: var(--gold) !important; }
+
+        /* Dropdown */
+        .nb-dd-wrap { position: relative; }
+        .nb-dropdown {
+          position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%);
+          background: white; border: 1px solid var(--border);
+          border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+          min-width: 240px; overflow: hidden; z-index: 300;
+          animation: ddFadeIn 0.15s ease;
+        }
+        @keyframes ddFadeIn {
+          from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .nb-dd-item {
+          display: block; padding: 11px 18px; font-size: 13px; font-weight: 500;
+          color: var(--text); text-decoration: none; white-space: nowrap;
+          border: none; background: none; cursor: pointer; width: 100%;
+          text-align: left; font-family: inherit;
+          transition: background 0.1s, color 0.1s;
+        }
+        .nb-dd-item:hover { background: var(--off-white); color: var(--gold); }
+        .nb-dd-item + .nb-dd-item { border-top: 1px solid var(--border); }
+
+        /* Chevron on dropdown parents */
+        .nb-chevron {
+          display: inline-block; margin-left: 4px; font-size: 9px;
+          color: var(--mid-gray); transition: transform 0.2s;
+        }
+        .nb-dd-wrap:hover .nb-chevron { transform: rotate(180deg); }
+
         @media (max-width: 768px) {
           .nb-nav-links { display: none !important; }
           .nb-hamburger { display: flex; align-items: center; justify-content: center; }
@@ -141,7 +216,6 @@ export default function Navbar() {
           .nb-btn-text { display: none; }
           .nb-lang-desktop { display: none; }
           .nb-lang-mobile { display: block; }
-
           .nb-logo { gap: 5px !important; }
           .nb-logo-text-wrap { font-size: 21px !important; letter-spacing: -0.3px !important; }
           .nb-logo-k { font-size: 26px !important; }
@@ -162,16 +236,39 @@ export default function Navbar() {
           {/* Desktop nav links */}
           <ul className="nb-nav-links" style={styles.navLinks}>
             {t.nav.items.map((item, i) => (
-              <li key={item}>
-                {MODAL_TRIGGER[i] ? (
-                  <button
-                    style={styles.navLinkBtn}
-                    onClick={() => MODAL_TRIGGER[i] === "vivir" ? setVivirOpen(true) : setContactOpen(true)}
-                  >
-                    {item}
-                  </button>
+              <li key={item} className={DROPDOWN_ITEMS[i] ? "nb-dd-wrap" : ""}
+                onMouseEnter={() => DROPDOWN_ITEMS[i] ? openDd(i) : undefined}
+                onMouseLeave={() => DROPDOWN_ITEMS[i] ? closeDd() : undefined}
+              >
+                {/* Dropdown parent */}
+                {DROPDOWN_ITEMS[i] ? (
+                  <>
+                    <button className="nb-nav-link-btn" style={styles.navLinkBtn}>
+                      {item}<span className="nb-chevron">▾</span>
+                    </button>
+                    {openDropdown === i && (
+                      <div className="nb-dropdown"
+                        onMouseEnter={() => openDd(i)}
+                        onMouseLeave={() => closeDd()}
+                      >
+                        {DROPDOWN_ITEMS[i].map((dd) =>
+                          dd.href ? (
+                            <a key={dd.label} href={dd.href} className="nb-dd-item">{dd.label}</a>
+                          ) : (
+                            <button key={dd.label} className="nb-dd-item"
+                              onClick={() => handleDropdownItem(dd)}
+                            >{dd.label}</button>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : MODAL_TRIGGER[i] ? (
+                  <button className="nb-nav-link-btn" style={styles.navLinkBtn}
+                    onClick={() => setContactOpen(true)}
+                  >{item}</button>
                 ) : (
-                  <a href={NAV_HREFS[i] ?? "#"} style={styles.navLink}>{item}</a>
+                  <a href={NAV_HREFS[i] ?? "#"} className="nb-nav-link" style={styles.navLink}>{item}</a>
                 )}
               </li>
             ))}
@@ -274,24 +371,47 @@ export default function Navbar() {
         {/* Mobile dropdown menu */}
         <div className={`nb-mobile-menu${menuOpen ? " open" : ""}`}>
           {t.nav.items.map((item, i) => (
-            MODAL_TRIGGER[i] ? (
-              <button
-                key={item}
-                style={{ ...styles.mobileNavLink, background: "none", border: "none", width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit" }}
-                onClick={() => { setMenuOpen(false); MODAL_TRIGGER[i] === "vivir" ? setVivirOpen(true) : setContactOpen(true); }}
-              >
-                {item}
-              </button>
-            ) : (
-              <a
-                key={item}
-                href={NAV_HREFS[i] ?? "#"}
-                style={styles.mobileNavLink}
-                onClick={() => setMenuOpen(false)}
-              >
-                {item}
-              </a>
-            )
+            <div key={item}>
+              {/* Dropdown parent — expandable on mobile */}
+              {DROPDOWN_ITEMS[i] ? (
+                <>
+                  <button
+                    style={{ ...styles.mobileNavLink, background: "none", border: "none", width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    onClick={() => setMobileExpanded(mobileExpanded === i ? null : i)}
+                  >
+                    {item}
+                    <span style={{ fontSize: 11, color: "var(--mid-gray)", transition: "transform 0.2s", transform: mobileExpanded === i ? "rotate(180deg)" : "none" }}>▾</span>
+                  </button>
+                  {mobileExpanded === i && (
+                    <div style={{ background: "var(--off-white)", borderBottom: "1px solid var(--border)" }}>
+                      {DROPDOWN_ITEMS[i].map((dd) =>
+                        dd.href ? (
+                          <a key={dd.label} href={dd.href} style={{ ...styles.mobileNavLink, paddingLeft: 36, fontSize: 14, borderBottom: "none", borderTop: "1px solid var(--border)", color: "var(--text-light)" }} onClick={() => setMenuOpen(false)}>
+                            {dd.label}
+                          </a>
+                        ) : (
+                          <button key={dd.label} style={{ ...styles.mobileNavLink, paddingLeft: 36, fontSize: 14, borderBottom: "none", borderTop: "1px solid var(--border)", color: "var(--text-light)", background: "none", border: "none", width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit", borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: "var(--border)" }}
+                            onClick={() => { handleDropdownItem(dd); setMenuOpen(false); }}>
+                            {dd.label}
+                          </button>
+                        )
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : MODAL_TRIGGER[i] ? (
+                <button
+                  style={{ ...styles.mobileNavLink, background: "none", border: "none", width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit" }}
+                  onClick={() => { setMenuOpen(false); setContactOpen(true); }}
+                >
+                  {item}
+                </button>
+              ) : (
+                <a href={NAV_HREFS[i] ?? "#"} style={styles.mobileNavLink} onClick={() => setMenuOpen(false)}>
+                  {item}
+                </a>
+              )}
+            </div>
           ))}
 
           {/* Language selector — mobile */}

@@ -146,7 +146,7 @@ export interface T {
 export const translations: Record<Lang, T> = {
   es: {
     nav: {
-      items: ["Comprar", "Alquilar", "Propietario", "Vivir en Madrid", "Servicio de Concierge", "Contacto"],
+      items: ["Comprar", "Alquilar", "Servicios al Propietario", "Servicios al Inquilino", "Contacto"],
       login: "Iniciar sesión",
     },
     hero: {
@@ -166,8 +166,8 @@ export const translations: Record<Lang, T> = {
       cards: [
         { title: "Comprar", desc: "Accede a propiedades exclusivas antes de que salgan al mercado. Nuestros agentes negocian las mejores condiciones para ti.", link: "Ver propiedades" },
         { title: "Alquilar", desc: "Pisos verificados, contratos transparentes y acompañamiento completo. Encuentra tu hogar en Madrid sin estrés.", link: "Explorar alquileres" },
-        { title: "Propietario (Vender/Alquilar)", desc: "Valoración gratuita, fotografía profesional y marketing digital. Vendemos tu propiedad al mejor precio del mercado.", link: "Solicitar valoración" },
-        { title: "Servicio de Concierge", desc: "Asistencia personalizada de alto nivel, diseñada para gestionar tareas logísticas, operativas y de estilo de vida.", link: "Descubre más" },
+        { title: "Servicios al Propietario", desc: "Valoración gratuita, fotografía profesional, marketing digital y gestión integral. Te acompañamos en cada paso para que vendas o alquiles al mejor precio.", link: "Solicitar valoración" },
+        { title: "Servicios al Inquilino", desc: "¿Buscas piso en Madrid o te estás mudando a la ciudad? Nuestro servicio de Personal Shopper Inmobiliario y Concierge te acompaña en todo el proceso: búsqueda a medida, asesoría experta e instalación sin estrés.", link: "Descubre más" },
       ],
     },
     barrios: {
@@ -241,7 +241,7 @@ export const translations: Record<Lang, T> = {
 
   en: {
     nav: {
-      items: ["Buy", "Rent", "Owner", "Living in Madrid", "Concierge Service", "Contact"],
+      items: ["Buy", "Rent", "Owner Services", "Tenant Services", "Contact"],
       login: "Log in",
     },
     hero: {
@@ -261,8 +261,8 @@ export const translations: Record<Lang, T> = {
       cards: [
         { title: "Buy", desc: "Access exclusive properties before they hit the market. Our agents negotiate the best conditions for you.", link: "View properties" },
         { title: "Rent", desc: "Verified flats, transparent contracts and full support. Find your home in Madrid stress-free.", link: "Explore rentals" },
-        { title: "Owner (Sell/Rent)", desc: "Free valuation, professional photography and digital marketing. We sell your property at the best market price.", link: "Request valuation" },
-        { title: "Concierge Service", desc: "High-level personalised assistance, designed to manage logistical, operational and lifestyle tasks.", link: "Discover more" },
+        { title: "Owner Services", desc: "Free valuation, professional photography, digital marketing and full management. We guide you every step of the way to sell or rent at the best price.", link: "Request valuation" },
+        { title: "Tenant Services", desc: "Looking for a flat in Madrid or relocating to the city? Our Personal Property Shopper and Concierge service guides you through every step: tailored search, expert advice and a smooth move from day one.", link: "Discover more" },
       ],
     },
     barrios: {
@@ -336,7 +336,7 @@ export const translations: Record<Lang, T> = {
 
   fr: {
     nav: {
-      items: ["Acheter", "Louer", "Propriétaire", "Vivre à Madrid", "Service Conciergerie", "Contact"],
+      items: ["Acheter", "Louer", "Services Propriétaire", "Services Locataire", "Contact"],
       login: "Se connecter",
     },
     hero: {
@@ -356,8 +356,8 @@ export const translations: Record<Lang, T> = {
       cards: [
         { title: "Acheter", desc: "Accédez à des propriétés exclusives avant qu'elles arrivent sur le marché. Nos agents négocient les meilleures conditions pour vous.", link: "Voir les propriétés" },
         { title: "Louer", desc: "Appartements vérifiés, contrats transparents et accompagnement complet. Trouvez votre logement à Madrid sans stress.", link: "Explorer les locations" },
-        { title: "Propriétaire (Vendre/Louer)", desc: "Estimation gratuite, photographie professionnelle et marketing digital. Nous vendons votre bien au meilleur prix du marché.", link: "Demander une estimation" },
-        { title: "Service Conciergerie", desc: "Assistance personnalisée haut de gamme, conçue pour gérer vos tâches logistiques, opérationnelles et de style de vie.", link: "Découvrir plus" },
+        { title: "Services Propriétaire", desc: "Estimation gratuite, photographie professionnelle, marketing digital et gestion complète. Nous vous accompagnons pour vendre ou louer au meilleur prix.", link: "Demander une estimation" },
+        { title: "Services Locataire", desc: "Vous cherchez un appartement à Madrid ou vous vous y installez ? Notre service de Personal Shopper Immobilier et de Conciergerie vous accompagne à chaque étape : recherche sur mesure, conseil expert et installation sans stress.", link: "Découvrir plus" },
       ],
     },
     barrios: {
@@ -431,7 +431,7 @@ export const translations: Record<Lang, T> = {
 
   de: {
     nav: {
-      items: ["Kaufen", "Mieten", "Eigentümer", "Leben in Madrid", "Concierge-Service", "Kontakt"],
+      items: ["Kaufen", "Mieten", "Eigentümer-Services", "Mieter-Services", "Kontakt"],
       login: "Anmelden",
     },
     hero: {
@@ -451,8 +451,8 @@ export const translations: Record<Lang, T> = {
       cards: [
         { title: "Kaufen", desc: "Zugang zu exklusiven Immobilien, bevor sie auf den Markt kommen. Unsere Makler verhandeln die besten Konditionen für Sie.", link: "Immobilien ansehen" },
         { title: "Mieten", desc: "Geprüfte Wohnungen, transparente Verträge und vollständige Begleitung. Finden Sie Ihr Zuhause in Madrid ohne Stress.", link: "Mietobjekte erkunden" },
-        { title: "Eigentümer (Verkaufen/Vermieten)", desc: "Kostenlose Bewertung, professionelle Fotografie und digitales Marketing. Wir verkaufen Ihre Immobilie zum besten Marktpreis.", link: "Bewertung anfragen" },
-        { title: "Concierge-Service", desc: "Persönlicher Hochklasse-Service, der logistische, operative und lebensstilbezogene Aufgaben übernimmt.", link: "Mehr entdecken" },
+        { title: "Eigentümer-Services", desc: "Kostenlose Bewertung, professionelle Fotografie, digitales Marketing und vollständige Verwaltung. Wir begleiten Sie beim Verkauf oder der Vermietung zum besten Preis.", link: "Bewertung anfragen" },
+        { title: "Mieter-Services", desc: "Sie suchen eine Wohnung in Madrid oder ziehen in die Stadt? Unser Personal Property Shopper und Concierge-Service begleitet Sie auf jedem Schritt: maßgeschneiderte Suche, Expertenberatung und ein stressfreier Neustart.", link: "Mehr entdecken" },
       ],
     },
     barrios: {
