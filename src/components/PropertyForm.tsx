@@ -679,7 +679,7 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                 {saving ? savingLabel : "Guardar borrador"}
               </button>
               <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
-                {saving ? savingLabel : isEdit ? "Guardar y publicar" : "Publicar"}
+                {saving ? savingLabel : "Publicar"}
               </button>
             </>
           )}
@@ -1198,7 +1198,7 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                   {saving ? savingLabel : "Guardar borrador"}
                 </button>
                 <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
-                  {saving ? savingLabel : isEdit ? "Guardar y publicar" : "Publicar"}
+                  {saving ? savingLabel : "Publicar"}
                 </button>
               </>
             )}
