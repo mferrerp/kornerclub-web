@@ -59,9 +59,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Sort by sortedPosition and return the ordered URL array + room labels
+  // Sort by sortedPosition — use originalIndex to look up the canonical URL
+  // from the input array (never trust the URL Claude echoes back, it may differ)
   ordered.sort((a, b) => a.sortedPosition - b.sortedPosition);
-  const orderedUrls = ordered.map((o) => o.url);
+  const orderedUrls = ordered.map((o) => {
+    const idx = typeof o.originalIndex === "number" ? o.originalIndex : -1;
+    return idx >= 0 && idx < urls.length ? urls[idx] : o.url;
+  });
   const rooms = ordered.map((o) => o.room);
 
   return NextResponse.json({ orderedUrls, rooms });

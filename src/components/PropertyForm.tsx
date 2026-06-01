@@ -606,10 +606,25 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
       const data = await res.json();
       if (!res.ok) { setOrderError(data.error ?? "Error al ordenar fotos."); return; }
       // Rebuild photos array in the new order (non-uploaded photos appended at end)
+      if (!Array.isArray(data.orderedUrls) || data.orderedUrls.length === 0) {
+        setOrderError("La IA no devolvió un orden válido. Las fotos no se han modificado.");
+        return;
+      }
+
       const newOrder = (data.orderedUrls as string[])
         .map((url: string) => photos.find((p) => p?.url === url))
         .filter(Boolean) as typeof photos;
       const pending = photos.filter((p) => !p?.url?.includes("res.cloudinary.com"));
+
+      // Safety: only apply if we recovered at least as many photos as we sent
+      if (newOrder.length < uploadedPhotos.length) {
+        setOrderError(
+          `Error: la IA devolvió ${newOrder.length} de ${uploadedPhotos.length} fotos. ` +
+          "El orden no se ha cambiado."
+        );
+        return;
+      }
+
       setPhotos([...newOrder, ...pending]);
       setMainPhotoIndex(0);
     } catch {
