@@ -146,7 +146,7 @@ export interface T {
 export const translations: Record<Lang, T> = {
   es: {
     nav: {
-      items: ["Comprar", "Alquilar", "Propietario", "Vivir en Madrid", "Servicio de Concierge", "Contacto"],
+      items: ["Comprar", "Alquilar", "Servicios al Propietario", "Servicios al Inquilino", "Contacto"],
       login: "Iniciar sesión",
     },
     hero: {
@@ -241,7 +241,7 @@ export const translations: Record<Lang, T> = {
 
   en: {
     nav: {
-      items: ["Buy", "Rent", "Owner", "Living in Madrid", "Concierge Service", "Contact"],
+      items: ["Buy", "Rent", "Owner Services", "Tenant Services", "Contact"],
       login: "Log in",
     },
     hero: {
@@ -336,7 +336,7 @@ export const translations: Record<Lang, T> = {
 
   fr: {
     nav: {
-      items: ["Acheter", "Louer", "Propriétaire", "Vivre à Madrid", "Service Conciergerie", "Contact"],
+      items: ["Acheter", "Louer", "Services Propriétaire", "Services Locataire", "Contact"],
       login: "Se connecter",
     },
     hero: {
@@ -431,7 +431,7 @@ export const translations: Record<Lang, T> = {
 
   de: {
     nav: {
-      items: ["Kaufen", "Mieten", "Eigentümer", "Leben in Madrid", "Concierge-Service", "Kontakt"],
+      items: ["Kaufen", "Mieten", "Eigentümer-Services", "Mieter-Services", "Kontakt"],
       login: "Anmelden",
     },
     hero: {
