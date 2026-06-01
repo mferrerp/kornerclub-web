@@ -286,6 +286,8 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
   const [translateError, setTranslateError] = useState<string | null>(null);
   const [orderingPhotos, setOrderingPhotos] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [fetchingCatastro, setFetchingCatastro] = useState(false);
+  const [catastroMsg, setCatastroMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [portals, setPortals] = useState<string[]>(
     (initialProperty as any)?.portals ?? []
   );
@@ -550,6 +552,42 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
     }
   }
 
+  async function handleFetchCatastro() {
+    const rc = form.cadastral_reference.trim();
+    if (!rc) return;
+    setFetchingCatastro(true);
+    setCatastroMsg(null);
+    try {
+      const res = await fetch(`/api/catastro?rc=${encodeURIComponent(rc)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setCatastroMsg({ type: "error", text: data.error ?? "Error al consultar el Catastro." });
+        return;
+      }
+      // Pre-fill available fields (only if currently empty to avoid overwriting)
+      const updates: Partial<FormState> = {};
+      if (data.sizem2 && !form.size_m2)           updates.size_m2 = String(data.sizem2);
+      if (data.constructionYear && !form.construction_year)
+        updates.construction_year = String(data.constructionYear);
+
+      const count = Object.keys(updates).length;
+      if (count > 0) {
+        Object.entries(updates).forEach(([k, v]) => set(k as keyof FormState, v as string));
+        const filled = [
+          updates.size_m2 && `superficie ${data.sizem2} m²`,
+          updates.construction_year && `año ${data.constructionYear}`,
+        ].filter(Boolean).join(", ");
+        setCatastroMsg({ type: "ok", text: `✓ Importado: ${filled}.` });
+      } else {
+        setCatastroMsg({ type: "ok", text: "✓ Los campos ya estaban rellenados. Sin cambios." });
+      }
+    } catch {
+      setCatastroMsg({ type: "error", text: "Error de conexión al consultar el Catastro." });
+    } finally {
+      setFetchingCatastro(false);
+    }
+  }
+
   async function handleOrderPhotos() {
     const uploadedPhotos = photos.filter((p) => p.url.includes("res.cloudinary.com"));
     if (uploadedPhotos.length < 2) {
@@ -675,7 +713,47 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                   <TextInput value={form.internal_reference} onChange={(v) => set("internal_reference", v)} placeholder="KC-001" />
                 </Field>
                 <Field label="Referencia catastral">
-                  <TextInput value={form.cadastral_reference} onChange={(v) => set("cadastral_reference", v)} placeholder="7836214VK4773H0001WA" />
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <div style={{ flex: 1 }}>
+                      <TextInput
+                        value={form.cadastral_reference}
+                        onChange={(v) => { set("cadastral_reference", v); setCatastroMsg(null); }}
+                        placeholder="7836214VK4773H0001WA"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      title="Importar superficie construida y año de construcción desde el Catastro"
+                      style={{
+                        flexShrink: 0,
+                        background: form.cadastral_reference.trim().length >= 14 ? "var(--gold, #b8973a)" : "#e8e8e8",
+                        color: form.cadastral_reference.trim().length >= 14 ? "white" : "#aaa",
+                        border: "none",
+                        borderRadius: 8,
+                        padding: "9px 14px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: form.cadastral_reference.trim().length >= 14 ? "pointer" : "not-allowed",
+                        fontFamily: "inherit",
+                        whiteSpace: "nowrap",
+                        transition: "background 0.15s",
+                      }}
+                      disabled={form.cadastral_reference.trim().length < 14 || fetchingCatastro}
+                      onClick={handleFetchCatastro}
+                    >
+                      {fetchingCatastro ? "Consultando…" : "↓ Catastro"}
+                    </button>
+                  </div>
+                  {catastroMsg && (
+                    <p style={{
+                      fontSize: 12,
+                      margin: "4px 0 0",
+                      color: catastroMsg.type === "ok" ? "#2e7d32" : "#c62828",
+                      lineHeight: 1.4,
+                    }}>
+                      {catastroMsg.text}
+                    </p>
+                  )}
                 </Field>
               </Row>
               <Row>
