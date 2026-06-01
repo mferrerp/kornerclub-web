@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Property, PROPERTY_TYPE_LABELS } from "@/types/property";
 import { thumbCard } from "@/lib/cloudinary";
@@ -9,6 +10,9 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property: p }: PropertyCardProps) {
+  const [favorited, setFavorited] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const photo = p.photos?.length > 0
     ? (p.photos[p.main_photo_index ?? 0] ?? p.photos[0])
     : null;
@@ -40,6 +44,33 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
     p.has_pool && "Piscina",
   ].filter(Boolean) as string[];
 
+  const url = typeof window !== "undefined"
+    ? `${window.location.origin}/propiedades/${p.id}`
+    : `/propiedades/${p.id}`;
+
+  async function handleShare(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const data = {
+      title: `${PROPERTY_TYPE_LABELS[p.property_type]} · ${locationLine || p.city}`,
+      text: `${priceLabel} — ${locationLine || p.city}`,
+      url,
+    };
+    if (navigator.share) {
+      await navigator.share(data).catch(() => {});
+    } else {
+      await navigator.clipboard.writeText(url).catch(() => {});
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  function handleFavorite(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setFavorited((f) => !f);
+  }
+
   return (
     <Link href={`/propiedades/${p.id}`} style={cardStyles.wrapper}>
       {/* Photo */}
@@ -55,6 +86,7 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
             </svg>
           </div>
         )}
+
         {/* Badges */}
         <div style={cardStyles.badges}>
           {p.is_featured && (
@@ -66,17 +98,56 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
             </span>
           )}
         </div>
+
+        {/* Action buttons — top right */}
+        <div style={cardStyles.actions}>
+          {/* Share */}
+          <button
+            style={cardStyles.actionBtn}
+            onClick={handleShare}
+            title={copied ? "¡Enlace copiado!" : "Compartir"}
+            aria-label="Compartir propiedad"
+          >
+            {copied ? (
+              // Checkmark when copied
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a227" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6"  cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51"  x2="8.59"  y2="10.49" />
+              </svg>
+            )}
+          </button>
+
+          {/* Favorite */}
+          <button
+            style={{
+              ...cardStyles.actionBtn,
+              color: favorited ? "#c9a227" : "currentColor",
+            }}
+            onClick={handleFavorite}
+            title={favorited ? "Quitar de favoritos" : "Añadir a favoritos"}
+            aria-label={favorited ? "Quitar de favoritos" : "Añadir a favoritos"}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              fill={favorited ? "#c9a227" : "none"}
+              stroke={favorited ? "#c9a227" : "currentColor"}
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Body */}
       <div style={cardStyles.body}>
-        {/* Type */}
         <p style={cardStyles.type}>{PROPERTY_TYPE_LABELS[p.property_type]}</p>
-
-        {/* Price */}
         <p style={cardStyles.price}>{priceLabel}</p>
-
-        {/* Location */}
         <p style={cardStyles.location}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -84,8 +155,6 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
           </svg>
           {locationLine || p.city}
         </p>
-
-        {/* Details row */}
         {details.length > 0 && (
           <div style={cardStyles.details}>
             {details.map((d) => (
@@ -93,8 +162,6 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
             ))}
           </div>
         )}
-
-        {/* Features */}
         {features.length > 0 && (
           <div style={cardStyles.features}>
             {features.slice(0, 4).map((f) => (
@@ -166,6 +233,30 @@ const cardStyles: { [key: string]: React.CSSProperties } = {
   badgeFeatured: {
     background: "var(--gold)",
     color: "white",
+  },
+  // Action buttons container — top right of photo
+  actions: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    display: "flex",
+    gap: 6,
+  },
+  actionBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: "50%",
+    background: "rgba(255,255,255,0.88)",
+    backdropFilter: "blur(4px)",
+    border: "none",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#1a1a1a",
+    boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+    transition: "background 0.15s, transform 0.15s",
+    flexShrink: 0,
   },
   body: {
     padding: "16px 18px 18px",
