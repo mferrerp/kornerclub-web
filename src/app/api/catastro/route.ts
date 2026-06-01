@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "text/xml; charset=utf-8",
-        "SOAPAction": "\"http://www.catastro.meh.es/Consulta_DNPRC\"",
+        "SOAPAction": "",
       },
       body: buildSoapEnvelope(refCat),
       signal: AbortSignal.timeout(12_000),
