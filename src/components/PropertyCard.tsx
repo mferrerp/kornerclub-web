@@ -5,12 +5,14 @@ import Link from "next/link";
 import { Property, PROPERTY_TYPE_LABELS } from "@/types/property";
 import { thumbCard } from "@/lib/cloudinary";
 import { supabase } from "@/lib/supabase";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PropertyCardProps {
   property: Property;
 }
 
 export default function PropertyCard({ property: p }: PropertyCardProps) {
+  const { t } = useLanguage();
   const [favorited, setFavorited] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -28,6 +30,16 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
   const locationLine = [p.neighborhood, p.district, p.city]
     .filter(Boolean)
     .join(", ");
+
+  // Same title logic as the detail page
+  const d = t.propertyDetail;
+  const ptMap: Record<string, string> = {
+    apartment: d.ptApartment, house: d.ptHouse, studio: d.ptStudio,
+    penthouse: d.ptPenthouse, duplex: d.ptDuplex, commercial: d.ptCommercial,
+    office: d.ptOffice, land: d.ptLand, garage: d.ptGarage, storage: d.ptStorage,
+  };
+  const typeLabel = ptMap[p.property_type] ?? PROPERTY_TYPE_LABELS[p.property_type];
+  const cardTitle = d.pageTitle(typeLabel, p.rooms ?? null, p.neighborhood ?? p.city ?? null);
 
   const details = [
     p.rooms != null ? `${p.rooms} hab.` : null,
@@ -152,7 +164,7 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
 
       {/* Body */}
       <div style={cardStyles.body}>
-        <p style={cardStyles.type}>{PROPERTY_TYPE_LABELS[p.property_type]}</p>
+        <p style={cardStyles.title}>{cardTitle}</p>
         <p style={cardStyles.price}>{priceLabel}</p>
         <p style={cardStyles.location}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
@@ -271,13 +283,13 @@ const cardStyles: { [key: string]: React.CSSProperties } = {
     gap: 6,
     flex: 1,
   },
-  type: {
-    fontSize: 11,
+  title: {
+    fontSize: 14,
     fontWeight: 600,
-    color: "var(--mid-gray)",
-    textTransform: "uppercase",
-    letterSpacing: "0.06em",
+    color: "var(--black)",
     margin: 0,
+    lineHeight: 1.35,
+    fontFamily: "var(--font-playfair), serif",
   },
   price: {
     fontSize: 20,
