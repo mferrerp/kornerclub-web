@@ -263,22 +263,45 @@ export default function AdminPropiedadesPage() {
                     {/* Actions */}
                     <td style={styles.td}>
                       <div style={styles.actions}>
-                        <Link
-                          href={`/admin/propiedades/${p.id}/editar`}
-                          style={styles.btnEdit}
-                        >
+                        <Link href={`/admin/propiedades/${p.id}/editar`} style={styles.btnEdit}>
                           Editar
                         </Link>
-                        <button
-                          style={{
-                            ...styles.btnDelete,
-                            opacity: deletingId === p.id ? 0.5 : 1,
-                          }}
-                          disabled={deletingId === p.id}
-                          onClick={() => deleteProperty(p.id)}
-                        >
-                          {deletingId === p.id ? "…" : "Eliminar"}
-                        </button>
+
+                        {/* Preview — only for unpublished drafts */}
+                        {!p.is_published && (
+                          <Link
+                            href={`/admin/propiedades/${p.id}/preview`}
+                            style={styles.btnPreview}
+                            target="_blank"
+                          >
+                            Vista previa
+                          </Link>
+                        )}
+
+                        {/* Unpublish for published / Delete for drafts */}
+                        {p.is_published ? (
+                          <button
+                            style={{
+                              ...styles.btnUnpublish,
+                              opacity: togglingId === p.id ? 0.5 : 1,
+                            }}
+                            disabled={togglingId === p.id}
+                            onClick={() => togglePublish(p)}
+                          >
+                            {togglingId === p.id ? "…" : "Despublicar"}
+                          </button>
+                        ) : (
+                          <button
+                            style={{
+                              ...styles.btnDelete,
+                              opacity: deletingId === p.id ? 0.5 : 1,
+                            }}
+                            disabled={deletingId === p.id}
+                            onClick={() => deleteProperty(p.id)}
+                          >
+                            {deletingId === p.id ? "…" : "Eliminar"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -554,6 +577,30 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 500,
     cursor: "pointer",
     fontFamily: "inherit",
+  },
+  btnUnpublish: {
+    background: "#fff8e1",
+    color: "#e65100",
+    border: "none",
+    borderRadius: 6,
+    padding: "6px 12px",
+    fontSize: 12,
+    fontWeight: 500,
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+  btnPreview: {
+    background: "#e8f0fe",
+    color: "#1a56db",
+    border: "none",
+    borderRadius: 6,
+    padding: "6px 12px",
+    fontSize: 12,
+    fontWeight: 500,
+    cursor: "pointer",
+    textDecoration: "none",
+    fontFamily: "inherit",
+    display: "inline-block",
   },
   emptyState: {
     background: "white",

@@ -28,6 +28,78 @@ const LANG_NAMES: Record<string, string> = {
   de: "German",
 };
 
+// ─── Prompt: AI photo ordering ────────────────────────────────────────────────
+//
+// Receives an array of Cloudinary photo URLs and returns them sorted by room
+// type following Spanish portal best practices (Idealista/Fotocasa data):
+// 1. Salón/comedor  2. Cocina  3. Dormitorio principal  4. Baño principal
+// 5. Dormitorios adicionales  6. Terraza/balcón/jardín  7. Baños adicionales
+// 8. Vestíbulo/entrada  9. Trastero/garaje  10. Fachada/zonas comunes  11. Otros
+//
+// Uses Claude's vision API — each URL is passed as an image_url source.
+
+export type PhotoOrderResult = {
+  index: number;      // original array index
+  url: string;
+  room: string;       // label in Spanish
+  order: number;      // 1-based position in final gallery
+};
+
+export function buildPhotoOrderPrompt(urls: string[]): object[] {
+  // Build the messages content array: text instruction + one image per photo
+  const content: object[] = [
+    {
+      type: "text",
+      text: `\
+You are a professional real estate photographer and listing optimizer for the \
+Spanish property market (Idealista, Fotocasa, Habitaclia).
+
+Analyze each of the ${urls.length} property photos below and:
+1. Identify the room/space shown (in Spanish).
+2. Assign it a sort order following these Spanish portal best-practice priorities \
+(lower number = earlier in the gallery to maximise CTR and engagement):
+   1  → Salón / salón-comedor (ALWAYS first — highest CTR driver)
+   2  → Cocina (second most decisive for buyers/renters)
+   3  → Dormitorio principal
+   4  → Baño principal (reformado o cuidado)
+   5  → Dormitorios adicionales (order: 5, 6, 7…)
+   6  → Terraza / balcón / jardín (move to position 2-3 if it is a standout feature)
+   7  → Baños adicionales / aseo
+   8  → Vestíbulo / entrada / pasillo
+   9  → Trastero / lavadero / zona de servicio
+   10 → Garaje / parking
+   11 → Fachada del edificio / portal / zonas comunes
+   12 → Vistas desde la propiedad
+   99 → Otros / sin identificar
+
+If multiple photos show the same room, keep them together and maintain their \
+relative order (e.g. two shots of the salón stay consecutive, first salón shot \
+gets order 1.0, second gets 1.1 — encode as decimals internally then convert \
+to sequential integers in your output).
+
+Respond ONLY with a valid JSON array — one object per photo, in the FINAL \
+sorted order. No markdown, no commentary:
+[
+  { "originalIndex": 0, "url": "...", "room": "Salón", "sortedPosition": 1 },
+  ...
+]`,
+    },
+  ];
+
+  urls.forEach((url, i) => {
+    content.push({
+      type: "text",
+      text: `Photo ${i} (originalIndex: ${i}):`,
+    });
+    content.push({
+      type: "image",
+      source: { type: "url", url },
+    });
+  });
+
+  return content;
+}
+
 // ─── Prompt: Natural-language property search ─────────────────────────────────
 //
 // Called when the user types a free-text query on /comprar or /alquiler.

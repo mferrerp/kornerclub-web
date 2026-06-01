@@ -284,6 +284,11 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
   const [translateSource, setTranslateSource] = useState<"es" | "en" | "fr" | "de">("es");
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
+  const [orderingPhotos, setOrderingPhotos] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [portals, setPortals] = useState<string[]>(
+    (initialProperty as any)?.portals ?? []
+  );
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -545,7 +550,39 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
     }
   }
 
+  async function handleOrderPhotos() {
+    const uploadedPhotos = photos.filter((p) => p.url.includes("res.cloudinary.com"));
+    if (uploadedPhotos.length < 2) {
+      setOrderError("Necesitas al menos 2 fotos ya guardadas para usar el orden automático. Guarda primero el borrador.");
+      return;
+    }
+    setOrderError(null);
+    setOrderingPhotos(true);
+    try {
+      const urls = uploadedPhotos.map((p) => p.url);
+      const res = await fetch("/api/ai/order-photos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setOrderError(data.error ?? "Error al ordenar fotos."); return; }
+      // Rebuild photos array in the new order (non-uploaded photos appended at end)
+      const newOrder = (data.orderedUrls as string[]).map((url: string) =>
+        photos.find((p) => p.url === url)!
+      );
+      const pending = photos.filter((p) => !p.url.includes("res.cloudinary.com"));
+      setPhotos([...newOrder, ...pending]);
+      setMainPhotoIndex(0);
+    } catch {
+      setOrderError("Error de conexión al ordenar fotos.");
+    } finally {
+      setOrderingPhotos(false);
+    }
+  }
+
   const isEdit = mode === "edit";
+  const isPublished = initialProperty?.is_published ?? false;
   const tabs = [
     { id: "tipo", label: "Tipo" },
     { id: "precio", label: "Precio" },
@@ -574,12 +611,25 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
         </div>
         <div style={styles.topBarRight}>
           <Link href="/admin/propiedades" style={styles.btnCancel}>Cancelar</Link>
-          <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(false)}>
-            {saving && !form.is_published ? savingLabel : "Guardar borrador"}
-          </button>
-          <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
-            {saving ? savingLabel : isEdit ? "Guardar y publicar" : "Publicar"}
-          </button>
+          {isPublished ? (
+            <>
+              <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
+                {saving ? savingLabel : "Actualizar publicación"}
+              </button>
+              <button style={{ ...styles.btnPublish, opacity: 0.4, cursor: "not-allowed" }} disabled title="Integración con portales próximamente">
+                Publicar en portales
+              </button>
+            </>
+          ) : (
+            <>
+              <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(false)}>
+                {saving ? savingLabel : "Guardar borrador"}
+              </button>
+              <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
+                {saving ? savingLabel : isEdit ? "Guardar y publicar" : "Publicar"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -895,6 +945,31 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                 Haz clic en una foto para marcarla como principal.
                 Los planos admiten imagen (JPG, PNG…) o <strong>PDF</strong>.
               </p>
+
+              {/* ── AI photo ordering strip ── */}
+              <div style={styles.aiStrip}>
+                <span style={styles.aiLabel}>
+                  ✦ Orden IA
+                </span>
+                <span style={{ fontSize: 12, color: "#666", flex: 1 }}>
+                  Claude analiza cada foto y las ordena según las best practices de portales inmobiliarios españoles (Idealista, Fotocasa).
+                </span>
+                <button
+                  style={{
+                    ...styles.aiBtn,
+                    opacity: (photos.filter(p => p.url.includes("res.cloudinary.com")).length < 2 || orderingPhotos) ? 0.45 : 1,
+                    cursor: (photos.filter(p => p.url.includes("res.cloudinary.com")).length < 2 || orderingPhotos) ? "not-allowed" : "pointer",
+                  }}
+                  disabled={photos.filter(p => p.url.includes("res.cloudinary.com")).length < 2 || orderingPhotos}
+                  onClick={handleOrderPhotos}
+                >
+                  {orderingPhotos ? (
+                    <><span style={styles.aiSpinner} />Analizando…</>
+                  ) : "Ordenar con IA →"}
+                </button>
+              </div>
+              {orderError && <p style={styles.aiError}>{orderError}</p>}
+
               <SectionDivider label="Fotos de la propiedad" />
               <p style={{ fontSize: 12, color: "#aaa", margin: "-4px 0 4px" }}>
                 Arrastra para reordenar · Clic para marcar como principal (se moverá a la primera posición)
@@ -979,18 +1054,61 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
               <Field label="Notas privadas" wide>
                 <Textarea value={form.private_notes} onChange={(v) => set("private_notes", v)} rows={4} placeholder="Notas internas, no visibles en la web pública…" />
               </Field>
+
+              {/* Portal publishing */}
+              <SectionDivider label="Publicación en portales" />
+              <Field label="Selecciona los portales donde publicar" wide>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
+                  {[
+                    { id: "idealista", label: "Idealista", url: "idealista.com" },
+                    { id: "fotocasa", label: "Fotocasa", url: "fotocasa.es" },
+                    { id: "habitaclia", label: "Habitaclia", url: "habitaclia.com" },
+                  ].map((portal) => (
+                    <label key={portal.id} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", fontSize: 14, color: "#1a1a1a" }}>
+                      <input
+                        type="checkbox"
+                        checked={portals.includes(portal.id)}
+                        onChange={(e) =>
+                          setPortals((prev) =>
+                            e.target.checked ? [...prev, portal.id] : prev.filter((p) => p !== portal.id)
+                          )
+                        }
+                        style={{ width: 16, height: 16, accentColor: "var(--gold)", cursor: "pointer" }}
+                      />
+                      <span style={{ fontWeight: 500 }}>{portal.label}</span>
+                      <span style={{ fontSize: 12, color: "#aaa" }}>{portal.url}</span>
+                    </label>
+                  ))}
+                </div>
+                <p style={{ fontSize: 11, color: "#aaa", margin: "8px 0 0", lineHeight: 1.5 }}>
+                  La publicación automática en portales estará disponible próximamente. Por ahora esta selección se guarda para cuando se active la integración.
+                </p>
+              </Field>
             </Section>
           )}
 
           {/* Bottom bar */}
           <div style={styles.bottomBar}>
             {error && <span style={styles.bottomError}>{error}</span>}
-            <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(false)}>
-              {saving ? savingLabel : "Guardar borrador"}
-            </button>
-            <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
-              {saving ? savingLabel : isEdit ? "Guardar y publicar" : "Publicar"}
-            </button>
+            {isPublished ? (
+              <>
+                <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
+                  {saving ? savingLabel : "Actualizar publicación"}
+                </button>
+                <button style={{ ...styles.btnPublish, opacity: 0.4, cursor: "not-allowed" }} disabled title="Integración con portales próximamente">
+                  Publicar en portales
+                </button>
+              </>
+            ) : (
+              <>
+                <button style={{ ...styles.btnSave, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(false)}>
+                  {saving ? savingLabel : "Guardar borrador"}
+                </button>
+                <button style={{ ...styles.btnPublish, opacity: saving ? 0.6 : 1 }} disabled={saving} onClick={() => handleSave(true)}>
+                  {saving ? savingLabel : isEdit ? "Guardar y publicar" : "Publicar"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
