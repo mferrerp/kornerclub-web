@@ -769,7 +769,7 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                       title="Importar superficie construida y año de construcción desde el Catastro"
                       style={{
                         flexShrink: 0,
-                        background: form.cadastral_reference.trim().length >= 14 ? "var(--gold, #b8973a)" : "#e8e8e8",
+                        background: form.cadastral_reference.trim().length >= 14 ? "var(--gold, #c9a227)" : "#e8e8e8",
                         color: form.cadastral_reference.trim().length >= 14 ? "white" : "#aaa",
                         border: "none",
                         borderRadius: 8,
@@ -791,7 +791,7 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                     <p style={{
                       fontSize: 12,
                       margin: "4px 0 0",
-                      color: catastroMsg.type === "ok" ? "#2e7d32" : "#c62828",
+                      color: catastroMsg.type === "ok" ? "var(--gold-dark, #a68318)" : "#c62828",
                       lineHeight: 1.4,
                     }}>
                       {catastroMsg.text}
@@ -1277,7 +1277,7 @@ function CheckboxGroup({ label, children }: { label?: string; children: React.Re
 function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label style={sectionStyles.checkLabel}>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ accentColor: "var(--gold, #b8973a)", width: 15, height: 15 }} />
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ accentColor: "var(--gold, #c9a227)", width: 15, height: 15 }} />
       {label}
     </label>
   );
@@ -1309,7 +1309,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   topBarRight: { display: "flex", alignItems: "center", gap: 8 },
   btnCancel: { background: "none", border: "1px solid #e8e8e8", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer", textDecoration: "none", color: "#666", fontFamily: "inherit", display: "inline-block" },
   btnSave: { background: "white", border: "1.5px solid #e8e8e8", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#1a1a1a", fontFamily: "inherit" },
-  btnPublish: { background: "var(--gold, #b8973a)", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "white", fontFamily: "inherit" },
+  btnPublish: { background: "var(--gold, #c9a227)", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "white", fontFamily: "inherit" },
   layout: { display: "flex", maxWidth: 1100, margin: "0 auto", padding: "24px", gap: 24, alignItems: "flex-start" },
   sidebar: { width: 180, flexShrink: 0, background: "white", borderRadius: 12, border: "1px solid #e8e8e8", padding: 8, display: "flex", flexDirection: "column" as const, gap: 2, position: "sticky", top: 68 },
   sidebarTab: { background: "none", border: "none", borderRadius: 8, padding: "9px 14px", fontSize: 13, fontWeight: 500, color: "#555", cursor: "pointer", textAlign: "left" as const, fontFamily: "inherit", transition: "all 0.15s" },
@@ -1320,10 +1320,10 @@ const styles: { [key: string]: React.CSSProperties } = {
   photoHint: { fontSize: 13, color: "#888", margin: "0 0 8px", lineHeight: 1.6 },
   photoGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 10, marginBottom: 8 },
   photoCard: { position: "relative", aspectRatio: "4/3", borderRadius: 8, overflow: "hidden", border: "2px solid transparent", cursor: "pointer" },
-  photoCardMain: { border: "2px solid var(--gold, #b8973a)" },
+  photoCardMain: { border: "2px solid var(--gold, #c9a227)" },
   photoCardDragOver: { border: "2px dashed #666", background: "#f5f5f5" },
   photoImg: { width: "100%", height: "100%", objectFit: "cover" as const, display: "block" },
-  mainBadge: { position: "absolute", bottom: 4, left: 4, background: "var(--gold, #b8973a)", color: "white", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4 },
+  mainBadge: { position: "absolute", bottom: 4, left: 4, background: "var(--gold, #c9a227)", color: "white", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4 },
   removePhotoBtn: { position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,0.55)", color: "white", border: "none", borderRadius: "50%", width: 22, height: 22, cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1 },
   addPhotoBtn: { aspectRatio: "4/3", border: "2px dashed #e8e8e8", borderRadius: 8, background: "white", cursor: "pointer", display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", gap: 4, fontFamily: "inherit" },
   pdfThumb: { width: "100%", height: "100%", background: "#fff5f5", display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 4px" },
@@ -1365,7 +1365,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: "flex",
     alignItems: "center",
     gap: 6,
-    background: "var(--gold, #b8973a)",
+    background: "var(--gold, #c9a227)",
     color: "white",
     border: "none",
     borderRadius: 6,
