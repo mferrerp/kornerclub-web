@@ -39,25 +39,38 @@ function IllustrationComprar() {
 function IllustrationAlquilar() {
   return (
     <svg width="88" height="88" viewBox="0 0 80 80" fill="none">
-      {/* Key ring/bow outer */}
-      <circle cx="28" cy="40" r="17" stroke="#c9a227" strokeWidth="3" fill="#fdf8ec"/>
-      {/* Key ring inner hole */}
-      <circle cx="28" cy="40" r="8" stroke="#c9a227" strokeWidth="2" fill="white"/>
-      {/* Center dot */}
-      <circle cx="28" cy="40" r="3" fill="#c9a227"/>
-      {/* Key shaft */}
-      <rect x="43" y="37" width="26" height="6" rx="3" fill="#1a1a1a"/>
+      {/* ── Door ────────────────────────────────────────────── */}
+      {/* Door body */}
+      <rect x="12" y="20" width="38" height="52" rx="3" fill="white" stroke="#1a1a1a" strokeWidth="2"/>
+      {/* Arched top fill */}
+      <path d="M14 35 Q14 22 31 22 Q48 22 48 35" fill="#fdf8ec"/>
+      {/* Arch outline */}
+      <path d="M14 35 Q14 22 31 22 Q48 22 48 35" fill="none" stroke="#1a1a1a" strokeWidth="2"/>
+      {/* Upper left panel */}
+      <rect x="17" y="37" width="12" height="10" rx="1.5" fill="none" stroke="#1a1a1a" strokeWidth="1.2" opacity="0.6"/>
+      {/* Upper right panel */}
+      <rect x="33" y="37" width="12" height="10" rx="1.5" fill="none" stroke="#1a1a1a" strokeWidth="1.2" opacity="0.6"/>
+      {/* Lower left panel */}
+      <rect x="17" y="52" width="12" height="12" rx="1.5" fill="none" stroke="#1a1a1a" strokeWidth="1.2" opacity="0.6"/>
+      {/* Lower right panel */}
+      <rect x="33" y="52" width="12" height="12" rx="1.5" fill="none" stroke="#1a1a1a" strokeWidth="1.2" opacity="0.6"/>
+      {/* Gold door knob */}
+      <circle cx="44" cy="47" r="3.5" fill="#c9a227"/>
+      <circle cx="44" cy="47" r="1.5" fill="#a68318"/>
+      {/* Doorstep */}
+      <rect x="8"  y="72" width="46" height="3" rx="1.5" fill="#1a1a1a" opacity="0.1"/>
+      <rect x="10" y="70" width="42" height="3" rx="1" fill="#1a1a1a" opacity="0.08"/>
+
+      {/* ── Key (diagonal, prominent) ────────────────────────── */}
+      {/* Key bow — large gold ring */}
+      <circle cx="65" cy="22" r="12" fill="#fdf8ec" stroke="#c9a227" strokeWidth="3"/>
+      <circle cx="65" cy="22" r="5.5" fill="white" stroke="#c9a227" strokeWidth="2"/>
+      <circle cx="65" cy="22" r="2"   fill="#c9a227"/>
+      {/* Key shaft — diagonal */}
+      <line x1="57" y1="31" x2="38" y2="63" stroke="#1a1a1a" strokeWidth="4" strokeLinecap="round"/>
       {/* Key teeth */}
-      <rect x="59" y="43" width="6" height="8" rx="2" fill="#1a1a1a"/>
-      <rect x="50" y="43" width="6" height="5" rx="2" fill="#1a1a1a"/>
-      {/* Small building top-right */}
-      <rect x="57" y="12" width="18" height="18" rx="2" fill="none" stroke="#1a1a1a" strokeWidth="1.5" opacity="0.35"/>
-      <rect x="60" y="16" width="5" height="5" rx="0.5" fill="#c9a227" opacity="0.45"/>
-      <rect x="67" y="16" width="5" height="5" rx="0.5" fill="#c9a227" opacity="0.45"/>
-      <rect x="63" y="24" width="6" height="6" rx="0.5" fill="#1a1a1a" opacity="0.2"/>
-      {/* Gold sparkle above key */}
-      <circle cx="60" cy="26" r="2.5" fill="#c9a227" opacity="0.7"/>
-      <circle cx="68" cy="21" r="1.5" fill="#c9a227" opacity="0.45"/>
+      <line x1="47" y1="48" x2="42" y2="52" stroke="#1a1a1a" strokeWidth="3" strokeLinecap="round"/>
+      <line x1="43" y1="55" x2="38" y2="59" stroke="#1a1a1a" strokeWidth="3" strokeLinecap="round"/>
     </svg>
   );
 }
