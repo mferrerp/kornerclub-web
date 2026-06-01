@@ -606,10 +606,10 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
       const data = await res.json();
       if (!res.ok) { setOrderError(data.error ?? "Error al ordenar fotos."); return; }
       // Rebuild photos array in the new order (non-uploaded photos appended at end)
-      const newOrder = (data.orderedUrls as string[]).map((url: string) =>
-        photos.find((p) => p.url === url)!
-      );
-      const pending = photos.filter((p) => !p.url.includes("res.cloudinary.com"));
+      const newOrder = (data.orderedUrls as string[])
+        .map((url: string) => photos.find((p) => p?.url === url))
+        .filter(Boolean) as typeof photos;
+      const pending = photos.filter((p) => !p?.url?.includes("res.cloudinary.com"));
       setPhotos([...newOrder, ...pending]);
       setMainPhotoIndex(0);
     } catch {
@@ -1035,10 +1035,10 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                 <button
                   style={{
                     ...styles.aiBtn,
-                    opacity: (photos.filter(p => p.url.includes("res.cloudinary.com")).length < 2 || orderingPhotos) ? 0.45 : 1,
-                    cursor: (photos.filter(p => p.url.includes("res.cloudinary.com")).length < 2 || orderingPhotos) ? "not-allowed" : "pointer",
+                    opacity: (photos.filter(p => p?.url?.includes("res.cloudinary.com")).length < 2 || orderingPhotos) ? 0.45 : 1,
+                    cursor: (photos.filter(p => p?.url?.includes("res.cloudinary.com")).length < 2 || orderingPhotos) ? "not-allowed" : "pointer",
                   }}
-                  disabled={photos.filter(p => p.url.includes("res.cloudinary.com")).length < 2 || orderingPhotos}
+                  disabled={photos.filter(p => p?.url?.includes("res.cloudinary.com")).length < 2 || orderingPhotos}
                   onClick={handleOrderPhotos}
                 >
                   {orderingPhotos ? (
