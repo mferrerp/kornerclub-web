@@ -117,6 +117,13 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [contactOpen, vivirOpen]);
 
+  // Allow other components to open the auth modal via custom event
+  useEffect(() => {
+    const handler = () => setShowAuth(true);
+    window.addEventListener("open-auth-modal", handler);
+    return () => window.removeEventListener("open-auth-modal", handler);
+  }, []);
+
   // External trigger (e.g. from detail page "Solicitar información" button)
   useEffect(() => {
     const handler = (e: Event) => {

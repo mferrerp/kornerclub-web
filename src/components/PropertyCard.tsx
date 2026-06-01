@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Property, PROPERTY_TYPE_LABELS } from "@/types/property";
 import { thumbCard } from "@/lib/cloudinary";
+import { supabase } from "@/lib/supabase";
 
 interface PropertyCardProps {
   property: Property;
@@ -65,9 +66,14 @@ export default function PropertyCard({ property: p }: PropertyCardProps) {
     }
   }
 
-  function handleFavorite(e: React.MouseEvent) {
+  async function handleFavorite(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      window.dispatchEvent(new CustomEvent("open-auth-modal"));
+      return;
+    }
     setFavorited((f) => !f);
   }
 
