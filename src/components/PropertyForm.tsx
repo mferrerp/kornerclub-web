@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -287,6 +287,16 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
   const [orderingPhotos, setOrderingPhotos] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [fetchingCatastro, setFetchingCatastro] = useState(false);
+
+  // Auto-generate sequential internal reference on create
+  useEffect(() => {
+    if (mode !== "create") return;
+    fetch("/api/internal-ref")
+      .then((r) => r.json())
+      .then(({ ref }) => { if (ref) set("internal_reference", ref); })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [catastroMsg, setCatastroMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [portals, setPortals] = useState<string[]>(
     (initialProperty as any)?.portals ?? []
@@ -725,7 +735,25 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
               </Row>
               <Row>
                 <Field label="Referencia interna">
-                  <TextInput value={form.internal_reference} onChange={(v) => set("internal_reference", v)} placeholder="KC-001" />
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "9px 14px",
+                    background: "#f5f5f3",
+                    border: "1.5px solid #e8e8e8",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: form.internal_reference ? "#1a1a1a" : "#bbb",
+                    fontFamily: "inherit",
+                    letterSpacing: "0.03em",
+                  }}>
+                    {form.internal_reference || "Generando…"}
+                    <span style={{ fontSize: 11, fontWeight: 400, color: "#aaa", marginLeft: "auto" }}>
+                      Auto
+                    </span>
+                  </div>
                 </Field>
                 <Field label="Referencia catastral">
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
