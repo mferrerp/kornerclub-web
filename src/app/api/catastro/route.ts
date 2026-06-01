@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * Proxy to the Sede Electrónica del Catastro free public web service.
- * Calls Consulta_DNPRC with the given referencia catastral and returns
- * a clean JSON subset of non-protected data.
+ * Uses the SOAP interface which is more reliable than the HTTP GET variant.
  *
  * Catastro rate limit: 3 600 req / hour / IP.
- * No API key required. Service excludes País Vasco and Navarre.
+ * No API key required. Excludes País Vasco and Navarre.
  *
  * Fields returned:
  *   sfc  → superficie construida (m²)
@@ -17,14 +16,31 @@ import { NextRequest, NextResponse } from "next/server";
  *   dm   → municipio
  */
 
-const CATASTRO_URL =
-  "https://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCallejero.asmx/Consulta_DNPRC";
+// The Catastro service runs on HTTP (legacy infra) — HTTPS causes 500s on some nodes
+const SOAP_URL =
+  "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCallejero.asmx";
 
-/** Extract a single XML element's text content, case-insensitive tag. */
+/** Extract a single XML element's text content (case-insensitive tag). */
 function xmlText(xml: string, tag: string): string | null {
   const re = new RegExp(`<${tag}[^>]*>([^<]*)<\/${tag}>`, "i");
   const m = xml.match(re);
   return m ? m[1].trim() || null : null;
+}
+
+function buildSoapEnvelope(refCat: string): string {
+  return `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <Consulta_DNPRC xmlns="http://www.catastro.meh.es/">
+      <Provincia></Provincia>
+      <Municipio></Municipio>
+      <RefCat>${refCat}</RefCat>
+    </Consulta_DNPRC>
+  </soap:Body>
+</soap:Envelope>`;
 }
 
 export async function GET(request: NextRequest) {
@@ -35,7 +51,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Clean the reference — remove spaces and hyphens
-  const refCat = rc.replace(/[\s-]/g, "").toUpperCase();
+  const refCat = rc.replace(/[\s\-]/g, "").toUpperCase();
 
   if (refCat.length < 14) {
     return NextResponse.json(
@@ -46,11 +62,14 @@ export async function GET(request: NextRequest) {
 
   let catastroRes: Response;
   try {
-    const url = `${CATASTRO_URL}?Provincia=&Municipio=&RefCat=${encodeURIComponent(refCat)}`;
-    catastroRes = await fetch(url, {
-      headers: { Accept: "text/xml,application/xml" },
-      // 10 second timeout — catastro can be slow
-      signal: AbortSignal.timeout(10_000),
+    catastroRes = await fetch(SOAP_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        "SOAPAction": "\"http://www.catastro.meh.es/Consulta_DNPRC\"",
+      },
+      body: buildSoapEnvelope(refCat),
+      signal: AbortSignal.timeout(12_000),
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "timeout";
@@ -60,35 +79,43 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const xml = await catastroRes.text();
+
   if (!catastroRes.ok) {
+    // Try to surface a useful error from the XML body before giving up
+    const soapFault = xmlText(xml, "faultstring") ?? xmlText(xml, "faultcode");
     return NextResponse.json(
-      { error: `El Catastro devolvió un error HTTP ${catastroRes.status}.` },
+      { error: soapFault ?? `El Catastro devolvió un error HTTP ${catastroRes.status}.` },
       { status: 502 }
     );
   }
 
-  const xml = await catastroRes.text();
-
-  // Check for Catastro-level errors embedded in the XML
-  const lerr = xmlText(xml, "lerr");
-  const cod  = xmlText(xml, "cod");
-  if (lerr || (cod && cod !== "0")) {
-    const msg = xmlText(xml, "des") ?? xmlText(xml, "err") ?? "Referencia catastral no encontrada.";
+  // Check for application-level errors embedded in the XML response
+  const cod = xmlText(xml, "cod");
+  if (cod && cod !== "0") {
+    const msg =
+      xmlText(xml, "des") ??
+      xmlText(xml, "err") ??
+      "Referencia catastral no encontrada o no disponible.";
     return NextResponse.json({ error: msg }, { status: 404 });
   }
 
-  // Extract fields we care about
-  const sfc  = xmlText(xml, "sfc");   // superficie construida
+  // Extract the fields we care about
+  const sfc  = xmlText(xml, "sfc");   // superficie construida (m²)
   const ant  = xmlText(xml, "ant");   // año construcción
   const luso = xmlText(xml, "luso");  // tipo de uso
   const ldt  = xmlText(xml, "ldt");   // dirección literal
   const dp   = xmlText(xml, "dp");    // código postal
   const dm   = xmlText(xml, "dm");    // municipio
 
-  // Validate we got at least something meaningful
   if (!sfc && !ant) {
     return NextResponse.json(
-      { error: "El Catastro no devolvió datos para esta referencia. Comprueba que sea correcta y que la propiedad esté en territorio de régimen común (no País Vasco ni Navarra)." },
+      {
+        error:
+          "El Catastro no devolvió datos para esta referencia. " +
+          "Verifica que sea correcta y que la propiedad esté en territorio de régimen común " +
+          "(el servicio no cubre País Vasco ni Navarra).",
+      },
       { status: 404 }
     );
   }
