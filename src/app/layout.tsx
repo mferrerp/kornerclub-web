@@ -44,6 +44,34 @@ export const metadata: Metadata = {
   },
 };
 
+const schemaOrg = {
+  "@context": "https://schema.org",
+  "@type": ["RealEstateAgent", "LocalBusiness"],
+  name: "Korner Club",
+  description:
+    "Inmobiliaria digital en Madrid. Especialistas en acompañar a recién llegados en su proceso de instalación y búsqueda de vivienda.",
+  url: "https://kornerclub.es",
+  email: "hola@kornerclub.es",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Madrid",
+    addressRegion: "Comunidad de Madrid",
+    addressCountry: "ES",
+  },
+  areaServed: {
+    "@type": "City",
+    name: "Madrid",
+  },
+  priceRange: "€€€",
+  openingHoursSpecification: {
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    opens: "09:00",
+    closes: "19:00",
+  },
+  sameAs: ["https://kornerclub.es"],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,6 +79,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
+        />
+      </head>
       <body className={`${playfair.variable} ${dmSans.variable} ${libreFranklin.variable}`}>
         <LanguageProvider>{children}</LanguageProvider>
       </body>
