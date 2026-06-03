@@ -696,9 +696,62 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
         </div>
       </div>
 
-      <div style={styles.layout}>
-        {/* Sidebar */}
-        <nav style={styles.sidebar}>
+      {/* Mobile tab carousel — shown only on small screens */}
+      <div className="pf-tab-carousel">
+        <style>{`
+          .pf-tab-carousel {
+            display: none;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            padding: 8px 12px;
+            gap: 6px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+          }
+          .pf-tab-carousel::-webkit-scrollbar { display: none; }
+          .pf-tab-btn {
+            flex-shrink: 0;
+            border: none;
+            border-radius: 20px;
+            padding: 7px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            background: #f0f0ee;
+            color: #555;
+            white-space: nowrap;
+            transition: all 0.15s;
+          }
+          .pf-tab-btn.active {
+            background: #1a1a1a;
+            color: white;
+          }
+          @media (max-width: 768px) {
+            .pf-tab-carousel { display: flex; }
+            .pf-sidebar-desktop { display: none !important; }
+            .pf-layout { flex-direction: column !important; padding: 12px !important; }
+            .pf-form-area { width: 100% !important; }
+          }
+        `}</style>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            className={`pf-tab-btn${activeTab === t.id ? " active" : ""}`}
+            onClick={() => setActiveTab(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={styles.layout} className="pf-layout">
+        {/* Sidebar — desktop only */}
+        <nav style={styles.sidebar} className="pf-sidebar-desktop">
           {tabs.map((t) => (
             <button
               key={t.id}
@@ -711,7 +764,7 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
         </nav>
 
         {/* Form */}
-        <div style={styles.formArea}>
+        <div style={styles.formArea} className="pf-form-area">
           {error && (
             <div style={styles.errorBanner}>
               {error}

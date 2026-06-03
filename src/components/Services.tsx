@@ -44,7 +44,7 @@ export default function Services() {
     <>
       <style>{`
         @media (max-width: 768px) {
-          .services-grid { grid-template-columns: 1fr 1fr !important; }
+          .services-grid { grid-template-columns: 1fr !important; }
         }
         .service-card:hover { box-shadow: 0 8px 32px rgba(201,162,39,0.12), 0 2px 8px rgba(0,0,0,0.06) !important; transform: translateY(-2px); }
         .service-card { transition: all 0.25s ease; }
