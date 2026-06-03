@@ -35,9 +35,9 @@ body {
 }
 
 @media (max-width: 768px) {
-  /* Services: 4 col → 2 col */
+  /* Services: 4 col → 1 col on mobile */
   .services-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: 1fr !important;
   }
 
   /* Barrios: 5 col fixed-height → 2 col with aspect-ratio */
