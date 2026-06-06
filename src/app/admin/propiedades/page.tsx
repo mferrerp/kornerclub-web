@@ -216,11 +216,17 @@ export default function AdminPropiedadesPage() {
                       )}
                     </td>
 
-                    {/* Address */}
+                    {/* Address — links to preview or public detail page */}
                     <td style={styles.td}>
-                      <div style={styles.propAddress}>
+                      <Link
+                        href={p.is_published ? `/propiedades/${p.id}` : `/admin/propiedades/${p.id}/preview`}
+                        target="_blank"
+                        style={styles.propAddressLink}
+                        title={p.is_published ? "Ver en la web pública" : "Ver vista previa"}
+                      >
                         {p.address ? `${p.address}, ` : ""}{p.city}
-                      </div>
+                        <span style={styles.propAddressArrow}>↗</span>
+                      </Link>
                       {p.internal_reference && (
                         <div style={styles.propRef}>Ref: {p.internal_reference}</div>
                       )}
@@ -512,6 +518,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 500,
     color: "#1a1a1a",
     marginBottom: 2,
+  },
+  propAddressLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    fontWeight: 500,
+    color: "#1a1a1a",
+    textDecoration: "none",
+    marginBottom: 2,
+  },
+  propAddressArrow: {
+    fontSize: 11,
+    color: "#aaa",
+    lineHeight: 1,
   },
   propRef: {
     fontSize: 11,
