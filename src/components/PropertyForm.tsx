@@ -631,26 +631,42 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
     }
   }
 
-  /** Download all uploaded photos with Korner watermark applied */
+  /** Download all uploaded photos with Korner watermark as a single ZIP (JPG format) */
   async function handleDownloadWatermarks() {
     const uploaded = photos.filter((p) => p.url.includes("res.cloudinary.com"));
     if (uploaded.length === 0) return;
     setDownloadingWm(true);
+    setUploadOnlyMsg(null);
     try {
-      for (let i = 0; i < uploaded.length; i++) {
-        const wmUrl = thumbGallery(uploaded[i].url);
-        // Insert fl_attachment so Cloudinary sends it as a file download
-        const dlUrl = wmUrl.replace("/upload/", "/upload/fl_attachment/");
-        const a = document.createElement("a");
-        a.href = dlUrl;
-        a.download = `korner-watermark-${i + 1}.jpg`;
-        a.target = "_blank";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        // Small delay between downloads to avoid browser blocking
-        if (i < uploaded.length - 1) await new Promise((r) => setTimeout(r, 400));
-      }
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+
+      const refSlug = form.internal_reference || initialProperty?.id || "korner";
+
+      await Promise.all(
+        uploaded.map(async (item, i) => {
+          // Build watermark URL: f_jpg forces JPEG, fl_attachment removed (we bundle ourselves)
+          const wmUrl = thumbGallery(item.url).replace("/upload/", "/upload/f_jpg/");
+          const resp = await fetch(wmUrl);
+          if (!resp.ok) throw new Error(`Error descargando foto ${i + 1}`);
+          const blob = await resp.blob();
+          zip.file(`${refSlug}-${String(i + 1).padStart(2, "0")}.jpg`, blob);
+        })
+      );
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${refSlug}-watermarks.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setUploadOnlyMsg({ type: "ok", text: `✓ ZIP con ${uploaded.length} foto${uploaded.length !== 1 ? "s" : ""} descargado correctamente.` });
+    } catch (e) {
+      setUploadOnlyMsg({ type: "error", text: e instanceof Error ? e.message : "Error al generar el ZIP." });
     } finally {
       setDownloadingWm(false);
     }
