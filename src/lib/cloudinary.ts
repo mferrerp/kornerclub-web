@@ -23,7 +23,9 @@ export function cloudinaryThumb(
  *   2. e_make_transparent:40 → remove the white background (tolerance 40)
  *   3. fl_layer_apply → close/place the layer with size, opacity & position
  */
-const WM = "l_wordmark-1linea-claro-1880_voqbek/e_make_transparent:40,w_0.9,fl_relative/fl_layer_apply,g_center,o_18";
+// x_0.05,fl_relative shifts the watermark 5% of image width to the right
+// to compensate for asymmetric transparent margins in the logo asset canvas.
+const WM = "l_wordmark-1linea-claro-1880_voqbek/e_make_transparent:40,w_0.9,fl_relative/fl_layer_apply,g_center,o_18,x_0.05,fl_relative";
 
 /** Small grid thumbnail — admin photo picker (NO watermark) */
 export const thumbAdmin = (url: string) => cloudinaryThumb(url, 240, 180);
