@@ -243,7 +243,7 @@ export default function Navbar() {
                 {/* Dropdown parent */}
                 {DROPDOWN_ITEMS[i] ? (
                   <>
-                    <button className="nb-nav-link-btn" style={styles.navLinkBtn}>
+                    <button className="nb-nav-link-btn" style={styles.navLinkBtn} suppressHydrationWarning>
                       {item}<span className="nb-chevron">▾</span>
                     </button>
                     {openDropdown === i && (
