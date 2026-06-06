@@ -27,12 +27,12 @@ export const metadata: Metadata = {
   description:
     "Inmobiliaria digital en Madrid. Especialistas en acompañar a recién llegados en su proceso de instalación y búsqueda de vivienda. Tu barrio, tu Korner.",
   icons: {
+    // /logo-icon.png lives in public/ — no build hash, stable URL for Google
     icon: [
-      { url: "/icon.png", type: "image/png", sizes: "192x192" },
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/logo-icon.png", type: "image/png", sizes: "192x192" },
     ],
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+    shortcut: "/favicon.ico",
+    apple: "/logo-icon.png",
   },
   metadataBase: new URL("https://kornerclub.es"),
   openGraph: {
