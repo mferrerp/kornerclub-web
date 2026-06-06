@@ -23,7 +23,7 @@ export function cloudinaryThumb(
  *   2. e_make_transparent:40 → remove the white background (tolerance 40)
  *   3. fl_layer_apply → close/place the layer with size, opacity & position
  */
-const WM = "l_wordmark-1linea-claro-1880_voqbek/e_make_transparent:40/fl_layer_apply,w_0.9,fl_relative,o_18,g_center";
+const WM = "l_wordmark-1linea-claro-1880_voqbek/e_make_transparent:40,w_0.9,fl_relative/fl_layer_apply,g_center,o_18";
 
 /** Small grid thumbnail — admin photo picker (NO watermark) */
 export const thumbAdmin = (url: string) => cloudinaryThumb(url, 240, 180);
