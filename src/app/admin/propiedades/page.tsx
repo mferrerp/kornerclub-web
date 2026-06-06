@@ -104,6 +104,12 @@ export default function AdminPropiedadesPage() {
 
   return (
     <div style={styles.page}>
+      <style>{`
+        @media (max-width: 768px) {
+          .admin-col-hide { display: none !important; }
+          .admin-table-wrapper { border-radius: 8px; }
+        }
+      `}</style>
       {/* Header */}
       <div style={styles.topBar}>
         <div style={styles.topBarLeft}>
@@ -181,15 +187,15 @@ export default function AdminPropiedadesPage() {
             )}
           </div>
         ) : (
-          <div style={styles.tableWrapper}>
+          <div style={styles.tableWrapper} className="admin-table-wrapper">
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={{ ...styles.th, width: 60 }}>Foto</th>
+                  <th style={{ ...styles.th, width: 60 }} className="admin-col-hide">Foto</th>
                   <th style={styles.th}>Propiedad</th>
-                  <th style={styles.th}>Tipo / Operación</th>
-                  <th style={styles.th}>Precio</th>
-                  <th style={styles.th}>Estado</th>
+                  <th style={styles.th} className="admin-col-hide">Tipo / Operación</th>
+                  <th style={styles.th} className="admin-col-hide">Precio</th>
+                  <th style={styles.th} className="admin-col-hide">Estado</th>
                   <th style={styles.th}>Publicada</th>
                   <th style={{ ...styles.th, width: 140 }}>Acciones</th>
                 </tr>
@@ -198,7 +204,7 @@ export default function AdminPropiedadesPage() {
                 {filtered.map((p) => (
                   <tr key={p.id} style={styles.tr}>
                     {/* Thumbnail */}
-                    <td style={styles.td}>
+                    <td style={styles.td} className="admin-col-hide">
                       {p.photos?.length > 0 ? (
                         <img
                           src={p.photos[p.main_photo_index ?? 0] ?? p.photos[0]}
@@ -210,11 +216,17 @@ export default function AdminPropiedadesPage() {
                       )}
                     </td>
 
-                    {/* Address */}
+                    {/* Address — links to preview or public detail page */}
                     <td style={styles.td}>
-                      <div style={styles.propAddress}>
+                      <Link
+                        href={p.is_published ? `/propiedades/${p.id}` : `/admin/propiedades/${p.id}/preview`}
+                        target="_blank"
+                        style={styles.propAddressLink}
+                        title={p.is_published ? "Ver en la web pública" : "Ver vista previa"}
+                      >
                         {p.address ? `${p.address}, ` : ""}{p.city}
-                      </div>
+                        <span style={styles.propAddressArrow}>↗</span>
+                      </Link>
                       {p.internal_reference && (
                         <div style={styles.propRef}>Ref: {p.internal_reference}</div>
                       )}
@@ -224,13 +236,13 @@ export default function AdminPropiedadesPage() {
                     </td>
 
                     {/* Type */}
-                    <td style={styles.td}>
+                    <td style={styles.td} className="admin-col-hide">
                       <div style={styles.propType}>{PROPERTY_TYPE_LABELS[p.property_type]}</div>
                       <div style={styles.propRef}>{OPERATION_TYPE_LABELS[p.operation_type]}</div>
                     </td>
 
                     {/* Price */}
-                    <td style={styles.td}>
+                    <td style={styles.td} className="admin-col-hide">
                       <div style={styles.price}>
                         {formatPrice(p.price)} €
                         {p.operation_type !== "sale" && <span style={styles.pricePer}>/mes</span>}
@@ -241,7 +253,7 @@ export default function AdminPropiedadesPage() {
                     </td>
 
                     {/* Status */}
-                    <td style={styles.td}>
+                    <td style={styles.td} className="admin-col-hide">
                       <span style={{ ...styles.statusBadge, ...statusColors[p.status] }}>
                         {STATUS_LABELS[p.status]}
                       </span>
@@ -506,6 +518,20 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 500,
     color: "#1a1a1a",
     marginBottom: 2,
+  },
+  propAddressLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    fontWeight: 500,
+    color: "#1a1a1a",
+    textDecoration: "none",
+    marginBottom: 2,
+  },
+  propAddressArrow: {
+    fontSize: 11,
+    color: "#aaa",
+    lineHeight: 1,
   },
   propRef: {
     fontSize: 11,

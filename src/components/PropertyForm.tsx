@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { thumbAdmin } from "@/lib/cloudinary";
+import { thumbAdmin, thumbGallery } from "@/lib/cloudinary";
 import {
   Property,
   OperationType,
@@ -287,6 +287,9 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
   const [orderingPhotos, setOrderingPhotos] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [fetchingCatastro, setFetchingCatastro] = useState(false);
+  const [uploadingOnly, setUploadingOnly] = useState(false);
+  const [uploadOnlyMsg, setUploadOnlyMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const [downloadingWm, setDownloadingWm] = useState(false);
 
   // Auto-generate sequential internal reference on create
   useEffect(() => {
@@ -595,6 +598,77 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
       setCatastroMsg({ type: "error", text: "Error de conexión al consultar el Catastro." });
     } finally {
       setFetchingCatastro(false);
+    }
+  }
+
+  /** Upload pending (local) photos to Cloudinary immediately, without saving the whole form */
+  async function handleUploadPhotosOnly() {
+    const pending = photos.filter((p) => !!p.file);
+    if (pending.length === 0) {
+      setUploadOnlyMsg({ type: "ok", text: "No hay fotos pendientes de subir." });
+      return;
+    }
+    setUploadingOnly(true);
+    setUploadOnlyMsg(null);
+    try {
+      const refSlug = form.internal_reference || (initialProperty?.id ?? Date.now().toString());
+      const folder = `kornerclub/properties/${refSlug}`;
+      const updated = [...photos];
+      let count = 0;
+      for (let i = 0; i < updated.length; i++) {
+        if (updated[i].file) {
+          const cloudUrl = await uploadToCloudinary(updated[i].file!, folder);
+          updated[i] = { url: cloudUrl };
+          count++;
+        }
+      }
+      setPhotos(updated);
+      setUploadOnlyMsg({ type: "ok", text: `✓ ${count} foto${count !== 1 ? "s" : ""} subida${count !== 1 ? "s" : ""} correctamente. Guarda el borrador para confirmar los cambios.` });
+    } catch {
+      setUploadOnlyMsg({ type: "error", text: "Error al subir las fotos. Revisa tu conexión e inténtalo de nuevo." });
+    } finally {
+      setUploadingOnly(false);
+    }
+  }
+
+  /** Download all uploaded photos with Korner watermark as a single ZIP (JPG format) */
+  async function handleDownloadWatermarks() {
+    const uploaded = photos.filter((p) => p.url.includes("res.cloudinary.com"));
+    if (uploaded.length === 0) return;
+    setDownloadingWm(true);
+    setUploadOnlyMsg(null);
+    try {
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+
+      const refSlug = form.internal_reference || initialProperty?.id || "korner";
+
+      await Promise.all(
+        uploaded.map(async (item, i) => {
+          // Build watermark URL: f_jpg forces JPEG, fl_attachment removed (we bundle ourselves)
+          const wmUrl = thumbGallery(item.url).replace("/upload/", "/upload/f_jpg/");
+          const resp = await fetch(wmUrl);
+          if (!resp.ok) throw new Error(`Error descargando foto ${i + 1}`);
+          const blob = await resp.blob();
+          zip.file(`${refSlug}-${String(i + 1).padStart(2, "0")}.jpg`, blob);
+        })
+      );
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${refSlug}-watermarks.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setUploadOnlyMsg({ type: "ok", text: `✓ ZIP con ${uploaded.length} foto${uploaded.length !== 1 ? "s" : ""} descargado correctamente.` });
+    } catch (e) {
+      setUploadOnlyMsg({ type: "error", text: e instanceof Error ? e.message : "Error al generar el ZIP." });
+    } finally {
+      setDownloadingWm(false);
     }
   }
 
@@ -1143,6 +1217,104 @@ export default function PropertyForm({ mode, initialProperty }: PropertyFormProp
                 </button>
               </div>
               {orderError && <p style={styles.aiError}>{orderError}</p>}
+
+              {/* ── Upload + Download watermark buttons ── */}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" as const, alignItems: "center" }}>
+                {/* Subir Fotos — upload pending local photos immediately */}
+                <button
+                  type="button"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: photos.some(p => !!p.file) ? "var(--gold, #c9a227)" : "#e8e8e8",
+                    color: photos.some(p => !!p.file) ? "white" : "#aaa",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "9px 18px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: photos.some(p => !!p.file) && !uploadingOnly ? "pointer" : "not-allowed",
+                    fontFamily: "inherit",
+                    opacity: uploadingOnly ? 0.6 : 1,
+                    transition: "all 0.15s",
+                  }}
+                  disabled={!photos.some(p => !!p.file) || uploadingOnly}
+                  onClick={handleUploadPhotosOnly}
+                  title={photos.some(p => !!p.file) ? "Sube las fotos seleccionadas a la nube sin guardar el resto del formulario" : "Añade fotos primero"}
+                >
+                  {uploadingOnly ? (
+                    <><span style={styles.aiSpinner} />Subiendo…</>
+                  ) : (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                      </svg>
+                      Subir Fotos
+                    </>
+                  )}
+                </button>
+
+                {/* Descargar Watermarks — only active when there are uploaded photos */}
+                <button
+                  type="button"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: "white",
+                    color: photos.some(p => p.url.includes("res.cloudinary.com")) ? "#1a1a1a" : "#bbb",
+                    border: `1.5px solid ${photos.some(p => p.url.includes("res.cloudinary.com")) ? "#d8d8d5" : "#e8e8e8"}`,
+                    borderRadius: 8,
+                    padding: "9px 18px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: photos.some(p => p.url.includes("res.cloudinary.com")) && !downloadingWm ? "pointer" : "not-allowed",
+                    fontFamily: "inherit",
+                    opacity: downloadingWm ? 0.6 : 1,
+                    transition: "all 0.15s",
+                  }}
+                  disabled={!photos.some(p => p.url.includes("res.cloudinary.com")) || downloadingWm}
+                  onClick={handleDownloadWatermarks}
+                  title="Descarga todas las fotos con el watermark de Korner Club"
+                >
+                  {downloadingWm ? (
+                    <><span style={{ ...styles.aiSpinner, borderTopColor: "#1a1a1a", borderColor: "rgba(0,0,0,0.15)" }} />Descargando…</>
+                  ) : (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/>
+                        <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>
+                      </svg>
+                      Descargar Watermarks
+                      {photos.filter(p => p.url.includes("res.cloudinary.com")).length > 0 && (
+                        <span style={{ fontSize: 11, background: "rgba(0,0,0,0.07)", borderRadius: 10, padding: "1px 7px", fontWeight: 500 }}>
+                          {photos.filter(p => p.url.includes("res.cloudinary.com")).length}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Upload feedback message */}
+              {uploadOnlyMsg && (
+                <div style={{
+                  fontSize: 13,
+                  padding: "10px 14px",
+                  borderRadius: 8,
+                  background: uploadOnlyMsg.type === "ok" ? "#f0fdf4" : "#fff0f0",
+                  border: `1px solid ${uploadOnlyMsg.type === "ok" ? "#bbf7d0" : "#fcd5d5"}`,
+                  color: uploadOnlyMsg.type === "ok" ? "#15803d" : "#c62828",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}>
+                  {uploadOnlyMsg.text}
+                  <button onClick={() => setUploadOnlyMsg(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", fontSize: 14, lineHeight: 1, padding: 0 }}>✕</button>
+                </div>
+              )}
 
               <SectionDivider label="Fotos de la propiedad" />
               <p style={{ fontSize: 12, color: "#aaa", margin: "-4px 0 4px" }}>
